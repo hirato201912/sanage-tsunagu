@@ -24,3 +24,91 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* React Big Calendar CSS */
+@import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+/* カスタムスタイリング */
+.rbc-calendar {
+  height: 600px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.rbc-event {
+  background-color: #3b82f6;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.rbc-event.video-lesson {
+  background-color: #10b981;
+}
+
+.rbc-event.face-to-face-lesson {
+  background-color: #f59e0b;
+}
+
+.rbc-today {
+  background-color: #eff6ff;
+}
+
+/* カレンダーのヘッダー調整 */
+.rbc-header {
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px;
+  font-weight: 600;
+}
+
+/* カレンダーのツールバー調整 */
+.rbc-toolbar {
+  margin-bottom: 1rem;
+}
+
+.rbc-toolbar button {
+  background-color: #3b82f6;
+  border: none;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+  margin: 0 2px;
+  cursor: pointer;
+}
+
+.rbc-toolbar button:hover {
+  background-color: #2563eb;
+}
+
+.rbc-toolbar button.rbc-active {
+  background-color: #1d4ed8;
+}
+
+/* 日付セルの調整 */
+.rbc-date-cell {
+  text-align: right;
+  padding: 4px;
+}
+
+/* イベントのテキスト調整 */
+.rbc-event-content {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .rbc-calendar {
+    height: 500px;
+  }
+  
+  .rbc-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .rbc-toolbar-label {
+    order: -1;
+    margin-bottom: 8px;
+  }
+}
