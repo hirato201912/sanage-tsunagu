@@ -53,3 +53,28 @@ export type RecurringSchedule = {
   notes?: string
   created_at: string
 }
+
+export type StudySession = {
+  id: string
+  student_id: string
+  subject: string
+  study_date: string
+  duration_minutes: number
+  notes?: string
+  created_at: string
+  updated_at: string
+}
+
+export type TestResult = {
+  id: string
+  student_id: string
+  test_name: string
+  subject: string
+  test_date: string
+  score: number
+  max_score: number
+  percentage: number
+  notes?: string
+  created_at: string
+  updated_at: string
+}

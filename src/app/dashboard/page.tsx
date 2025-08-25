@@ -139,10 +139,13 @@ export default function DashboardPage() {
         <h3 className="font-medium text-green-900">メッセージ</h3>
         <p className="text-sm text-green-700">講師とのやりとり</p>
       </button>
-      <div className="bg-purple-50 p-4 rounded-lg">
+      <button
+        onClick={() => router.push('/learning-records')}
+        className="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-left transition-colors"
+      >
         <h3 className="font-medium text-purple-900">学習記録</h3>
         <p className="text-sm text-purple-700">学習状況を記録</p>
-      </div>
+      </button>
     </div>
   </div>
 )}
