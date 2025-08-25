@@ -37,3 +37,19 @@ export type Message = {
   is_read: boolean
   created_at: string
 }
+
+export type RecurringSchedule = {
+  id: string
+  student_id: string
+  instructor_id?: string
+  lesson_type: 'video' | 'face_to_face'
+  subject: string
+  day_of_week: number // 0=日曜, 6=土曜
+  start_time: string
+  end_time: string
+  start_date: string
+  end_date?: string
+  is_active: boolean
+  notes?: string
+  created_at: string
+}
