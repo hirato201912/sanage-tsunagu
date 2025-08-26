@@ -6,20 +6,27 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Message, Profile } from '@/lib/supabase'
 
-interface MessageWithSender extends Message {
+interface MessageWithProfiles extends Message {
   sender: Profile
-  student: Profile
+  receiver: Profile
+}
+
+interface ConversationUser {
+  id: string
+  full_name: string
+  role: string
+  unread_count: number
 }
 
 export default function MessagesPage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
-  const [messages, setMessages] = useState<MessageWithSender[]>([])
+  const [messages, setMessages] = useState<MessageWithProfiles[]>([])
   const [messagesLoading, setMessagesLoading] = useState(true)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
-  const [selectedStudent, setSelectedStudent] = useState<Profile | null>(null)
-  const [students, setStudents] = useState<Profile[]>([])
+  const [selectedUser, setSelectedUser] = useState<Profile | null>(null)
+  const [availableUsers, setAvailableUsers] = useState<ConversationUser[]>([])
 
   useEffect(() => {
     if (!loading && !user) {
@@ -30,8 +37,12 @@ export default function MessagesPage() {
   useEffect(() => {
     if (profile) {
       initializeChat()
-      
-      // リアルタイム購読
+    }
+  }, [profile])
+
+  useEffect(() => {
+    if (profile && selectedUser) {
+      // Supabase Realtimeの購読
       const channel = supabase
         .channel('messages_realtime')
         .on('postgres_changes', {
@@ -40,24 +51,69 @@ export default function MessagesPage() {
           table: 'messages'
         }, async (payload) => {
           console.log('New message received:', payload)
+          const newMessageData = payload.new as Message
           
-          // 現在選択中の生徒に関連するメッセージかチェック
-          if (selectedStudent && payload.new.student_id === selectedStudent.id) {
-            const { data: newMessage } = await supabase
-              .from('messages')
-              .select(`
-                *,
-                sender:sender_id(id, full_name, role),
-                student:student_id(id, full_name, role)
-              `)
-              .eq('id', payload.new.id)
-              .single()
+          // 現在の会話に関連するメッセージかチェック
+          if ((newMessageData.sender_id === profile.id && newMessageData.receiver_id === selectedUser.id) ||
+              (newMessageData.sender_id === selectedUser.id && newMessageData.receiver_id === profile.id)) {
+            
+            // 自分が送信したメッセージの場合は重複追加を防ぐ
+            const isOwnMessage = newMessageData.sender_id === profile.id
+            if (isOwnMessage) {
+              // 既に表示されているかチェック
+              setMessages(prev => {
+                const messageExists = prev.some(msg => msg.id === newMessageData.id)
+                if (messageExists) {
+                  return prev // 既に存在する場合は追加しない
+                }
+                
+                // 存在しない場合は追加（フォールバック用）
+                return [...prev, {
+                  ...newMessageData,
+                  sender: profile,
+                  receiver: selectedUser
+                } as MessageWithProfiles]
+              })
+            } else {
+              // 相手からのメッセージの場合は取得して追加
+              const { data: messageWithProfiles } = await supabase
+                .from('messages')
+                .select(`
+                  *,
+                  sender:sender_id(id, full_name, role),
+                  receiver:receiver_id(id, full_name, role)
+                `)
+                .eq('id', newMessageData.id)
+                .single()
 
-            if (newMessage) {
-              setMessages(prev => [...prev, newMessage])
-              scrollToBottom()
+              if (messageWithProfiles) {
+                setMessages(prev => {
+                  // 重複チェック
+                  const messageExists = prev.some(msg => msg.id === messageWithProfiles.id)
+                  if (messageExists) return prev
+                  
+                  return [...prev, messageWithProfiles]
+                })
+                scrollToBottom()
+                
+                // メッセージが自分宛ての場合、既読にする
+                if (!newMessageData.is_read) {
+                  await markAsRead(newMessageData.id)
+                }
+              }
             }
           }
+          
+          // ユーザーリストの未読数を更新
+          fetchAvailableUsers()
+        })
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages'
+        }, () => {
+          // 既読更新時もユーザーリスト更新
+          fetchAvailableUsers()
         })
         .subscribe()
 
@@ -65,45 +121,64 @@ export default function MessagesPage() {
         supabase.removeChannel(channel)
       }
     }
-  }, [profile, selectedStudent])
-const initializeChat = async () => {
-  try {
-    console.log('Initializing chat for profile:', profile)
-    
-    await fetchStudents()
-    
-    // 生徒の場合は自分を自動選択
-    if (profile?.role === 'student') {
-      console.log('Auto-selecting student profile')
-      setSelectedStudent(profile)
-      await fetchMessages(profile.id)
-    } else {
-      console.log('Admin/Instructor - waiting for student selection')
-      // 塾長・講師の場合はローディングを終了
+  }, [profile, selectedUser])
+
+  const initializeChat = async () => {
+    try {
+      await fetchAvailableUsers()
+      setMessagesLoading(false)
+    } catch (error) {
+      console.error('Error in initializeChat:', error)
       setMessagesLoading(false)
     }
-  } catch (error) {
-    console.error('Error in initializeChat:', error)
-    setMessagesLoading(false) // エラー時もローディング終了
   }
-}
 
-  const fetchStudents = async () => {
+  const fetchAvailableUsers = async () => {
+    if (!profile) return
+
     try {
-      const { data, error } = await supabase
+      // 自分以外のユーザーを取得
+      const { data: users, error } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('role', 'student')
-        .order('full_name')
+        .select('id, full_name, role')
+        .neq('id', profile.id)
 
       if (error) throw error
-      setStudents(data || [])
+
+      // 各ユーザーとの未読メッセージ数を取得
+      const usersWithUnreadCount = await Promise.all(
+        (users || []).map(async (user) => {
+          const { count } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('sender_id', user.id)
+            .eq('receiver_id', profile.id)
+            .eq('is_read', false)
+
+          return {
+            ...user,
+            unread_count: count || 0
+          }
+        })
+      )
+
+      // 未読数順、その後名前順でソート
+      usersWithUnreadCount.sort((a, b) => {
+        if (a.unread_count !== b.unread_count) {
+          return b.unread_count - a.unread_count
+        }
+        return a.full_name.localeCompare(b.full_name)
+      })
+
+      setAvailableUsers(usersWithUnreadCount)
     } catch (error) {
-      console.error('Error fetching students:', error)
+      console.error('Error fetching available users:', error)
     }
   }
 
-  const fetchMessages = async (studentId: string) => {
+  const fetchMessages = async (otherUserId: string) => {
+    if (!profile) return
+
     try {
       setMessagesLoading(true)
       
@@ -112,13 +187,23 @@ const initializeChat = async () => {
         .select(`
           *,
           sender:sender_id(id, full_name, role),
-          student:student_id(id, full_name, role)
+          receiver:receiver_id(id, full_name, role)
         `)
-        .eq('student_id', studentId)
+        .or(`and(sender_id.eq.${profile.id},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${profile.id})`)
         .order('created_at', { ascending: true })
 
       if (error) throw error
       setMessages(data || [])
+      
+      // 未読メッセージを既読にする
+      const unreadMessages = (data || []).filter(msg => 
+        msg.receiver_id === profile.id && !msg.is_read
+      )
+      
+      if (unreadMessages.length > 0) {
+        const messageIds = unreadMessages.map(msg => msg.id)
+        await markMultipleAsRead(messageIds)
+      }
       
       setTimeout(scrollToBottom, 100)
       
@@ -129,6 +214,36 @@ const initializeChat = async () => {
     }
   }
 
+  const markAsRead = async (messageId: string) => {
+    try {
+      await supabase
+        .from('messages')
+        .update({ 
+          is_read: true, 
+          read_at: new Date().toISOString() 
+        })
+        .eq('id', messageId)
+    } catch (error) {
+      console.error('Error marking message as read:', error)
+    }
+  }
+
+  const markMultipleAsRead = async (messageIds: string[]) => {
+    try {
+      await supabase
+        .from('messages')
+        .update({ 
+          is_read: true, 
+          read_at: new Date().toISOString() 
+        })
+        .in('id', messageIds)
+        
+      fetchAvailableUsers() // 未読数更新
+    } catch (error) {
+      console.error('Error marking messages as read:', error)
+    }
+  }
+
   const scrollToBottom = () => {
     const messagesContainer = document.getElementById('messages-container')
     if (messagesContainer) {
@@ -136,31 +251,39 @@ const initializeChat = async () => {
     }
   }
 
-  const handleStudentSelect = (student: Profile) => {
-    setSelectedStudent(student)
-    fetchMessages(student.id)
+  const handleUserSelect = async (user: ConversationUser) => {
+    const userProfile = { id: user.id, full_name: user.full_name, role: user.role } as Profile
+    setSelectedUser(userProfile)
+    await fetchMessages(user.id)
   }
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || sending || !profile || !selectedStudent) return
+    if (!newMessage.trim() || sending || !profile || !selectedUser) return
 
     setSending(true)
     try {
       const messageData = {
         sender_id: profile.id,
-        student_id: selectedStudent.id, // 選択された生徒のID（必須）
-        message_text: newMessage.trim(),
-        message_type: 'individual' as const,
-        receiver_id: null // グループメッセージ的な扱い
+        receiver_id: selectedUser.id,
+        content: newMessage.trim(),
+        is_read: false
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert([messageData])
+        .select(`
+          *,
+          sender:sender_id(id, full_name, role),
+          receiver:receiver_id(id, full_name, role)
+        `)
 
-      if (error) {
-        console.error('Insert error:', error)
-        throw error
+      if (error) throw error
+
+      // 送信したメッセージをすぐに表示に追加
+      if (data && data[0]) {
+        setMessages(prev => [...prev, data[0]])
+        setTimeout(scrollToBottom, 100)
       }
 
       setNewMessage('')
@@ -225,23 +348,31 @@ const initializeChat = async () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+      <header className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <img 
                 src="/main_icon.png" 
                 alt="ツナグ" 
-                className="h-8 w-8"
+                className="h-12 w-12"
               />
-              <h1 className="text-3xl font-bold text-gray-900">メッセージ</h1>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">メッセージ</h1>
+                <p className="text-sm text-gray-600 mt-1">リアルタイムコミュニケーション</p>
+              </div>
             </div>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              ダッシュボードに戻る
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="text-sm font-medium">ダッシュボード</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -250,42 +381,55 @@ const initializeChat = async () => {
         <div className="px-4 py-6 sm:px-0">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
             
-            {/* 生徒選択サイドバー（塾長・講師のみ） */}
-            {(profile.role === 'admin' || profile.role === 'instructor') && (
-              <div className="lg:col-span-1 bg-white rounded-lg shadow">
-                <div className="p-4 border-b">
-                  <h2 className="font-medium text-gray-900">生徒選択</h2>
-                  <p className="text-sm text-gray-500">メッセージする生徒を選んでください</p>
-                </div>
-                <div className="overflow-y-auto max-h-96">
-                  {students.map((student) => (
+            {/* ユーザー選択サイドバー */}
+            <div className="lg:col-span-1 bg-white rounded-lg shadow">
+              <div className="p-4 border-b">
+                <h2 className="font-medium text-gray-900">連絡先</h2>
+                <p className="text-sm text-gray-500">メッセージする相手を選択</p>
+              </div>
+              <div className="overflow-y-auto max-h-96">
+                {availableUsers.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    連絡可能なユーザーがいません
+                  </div>
+                ) : (
+                  availableUsers.map((user) => (
                     <button
-                      key={student.id}
-                      onClick={() => handleStudentSelect(student)}
+                      key={user.id}
+                      onClick={() => handleUserSelect(user)}
                       className={`w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 transition-colors ${
-                        selectedStudent?.id === student.id ? 'bg-blue-50 border-blue-200' : ''
+                        selectedUser?.id === user.id ? 'bg-blue-50 border-blue-200' : ''
                       }`}
                     >
-                      <div className="font-medium text-sm">{student.full_name}</div>
-                      <div className="text-xs text-gray-500">生徒</div>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <div className="font-medium text-sm">{user.full_name}</div>
+                          <div className="text-xs text-gray-500">{getRoleText(user.role)}</div>
+                        </div>
+                        {user.unread_count > 0 && (
+                          <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                            {user.unread_count}
+                          </div>
+                        )}
+                      </div>
                     </button>
-                  ))}
-                </div>
+                  ))
+                )}
               </div>
-            )}
+            </div>
 
             {/* メッセージエリア */}
-            <div className={`${profile.role === 'student' ? 'lg:col-span-4' : 'lg:col-span-3'} bg-white rounded-lg shadow flex flex-col`}>
+            <div className="lg:col-span-3 bg-white rounded-lg shadow flex flex-col">
               
               {/* ヘッダー */}
               <div className="p-4 border-b bg-gray-50">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium text-gray-900">
-                    {selectedStudent ? (
+                    {selectedUser ? (
                       <>
-                        {selectedStudent.full_name}さんの学習サポート
+                        {selectedUser.full_name}さんとの会話
                         <div className="text-sm text-gray-500 mt-1">
-                          塾長・講師・{selectedStudent.full_name}さんが参加
+                          {getRoleText(selectedUser.role)}
                         </div>
                       </>
                     ) : (
@@ -303,18 +447,15 @@ const initializeChat = async () => {
                 id="messages-container"
                 className="flex-1 overflow-y-auto p-4 space-y-4"
               >
-                {!selectedStudent ? (
+                {!selectedUser ? (
                   <div className="text-center text-gray-500 mt-8">
-                    <div className="mb-4">👥</div>
-                    <div>
-                      {profile.role === 'student' 
-                        ? 'あなた専用の学習サポートチャットです' 
-                        : '生徒を選択してメッセージを開始してください'}
-                    </div>
+                    <div className="mb-4">💬</div>
+                    <div>連絡先から相手を選択してください</div>
+                    <div className="text-sm">メッセージのやり取りを開始できます</div>
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center text-gray-500 mt-8">
-                    <div className="mb-4">💬</div>
+                    <div className="mb-4">✨</div>
                     <div>まだメッセージがありません</div>
                     <div className="text-sm">最初のメッセージを送ってみましょう！</div>
                   </div>
@@ -333,6 +474,28 @@ const initializeChat = async () => {
                         <span className="text-xs text-gray-500">
                           {formatTime(message.created_at)}
                         </span>
+                        {/* 既読・未読表示（自分のメッセージのみ） */}
+                        {message.sender_id === profile.id && (
+                          <div className="flex items-center space-x-1">
+                            {message.is_read ? (
+                              <>
+                                <svg className="h-3 w-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                <span className="text-xs text-blue-500 font-medium">
+                                  既読 {message.read_at && `${formatTime(message.read_at)}`}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <svg className="h-3 w-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                                <span className="text-xs text-gray-400">未読</span>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                       
                       {/* メッセージ内容 */}
@@ -343,7 +506,7 @@ const initializeChat = async () => {
                             : 'bg-gray-100'
                         }`}>
                           <div className="text-gray-900 whitespace-pre-wrap">
-                            {message.message_text}
+                            {message.content}
                           </div>
                         </div>
                       </div>
@@ -353,7 +516,7 @@ const initializeChat = async () => {
               </div>
 
               {/* メッセージ入力 */}
-              {selectedStudent && (
+              {selectedUser && (
                 <div className="p-4 border-t bg-gray-50">
                   <div className="flex space-x-3">
                     <div className="flex-1">
@@ -374,9 +537,24 @@ const initializeChat = async () => {
                     <button
                       onClick={sendMessage}
                       disabled={!newMessage.trim() || sending}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 self-start"
+                      className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 self-start flex items-center space-x-2"
                     >
-                      {sending ? '送信中...' : '送信'}
+                      {sending ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          <span>送信中...</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                          <span>送信</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

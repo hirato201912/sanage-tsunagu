@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-const fetchProfile = async (userId: string) => {
+const fetchProfile = async (userId: string, retryCount = 0) => {
   try {
     console.log('Fetching profile for userId:', userId)
     
@@ -68,6 +68,23 @@ const fetchProfile = async (userId: string) => {
     console.log('Error:', error)
     
     if (error) {
+      // JWT期限切れエラーの場合
+      if (error.code === 'PGRST301' || error.code === 'PGRST302' || error.code === 'PGRST303') {
+        console.log('JWT expired, attempting to refresh session...')
+        
+        // セッションを再取得してリトライ
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session && retryCount < 2) {
+          console.log('Session refreshed, retrying profile fetch...')
+          return await fetchProfile(userId, retryCount + 1)
+        } else {
+          console.log('Session refresh failed, redirecting to login...')
+          await supabase.auth.signOut()
+          window.location.href = '/login'
+          return
+        }
+      }
+      
       console.error('Profile fetch error details:', error)
       
       // もしsingleでエラーが出る場合は、全件取得してみる
@@ -87,6 +104,12 @@ const fetchProfile = async (userId: string) => {
     }
   } catch (error) {
     console.error('Error fetching profile:', error)
+    
+    // ネットワークエラーなどの場合も再試行
+    if (retryCount < 2) {
+      console.log(`Retrying profile fetch... (attempt ${retryCount + 1})`)
+      setTimeout(() => fetchProfile(userId, retryCount + 1), 1000)
+    }
   }
 }
 
