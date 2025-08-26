@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Message, Profile } from '@/lib/supabase'
+import { notificationService } from '@/lib/notifications'
 
 interface MessageWithProfiles extends Message {
   sender: Profile
@@ -27,6 +28,7 @@ export default function MessagesPage() {
   const [sending, setSending] = useState(false)
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null)
   const [availableUsers, setAvailableUsers] = useState<ConversationUser[]>([])
+  const [notificationPermissionRequested, setNotificationPermissionRequested] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -37,8 +39,19 @@ export default function MessagesPage() {
   useEffect(() => {
     if (profile) {
       initializeChat()
+      // 通知許可を要求（初回のみ）
+      requestNotificationPermission()
     }
   }, [profile])
+
+  const requestNotificationPermission = async () => {
+    if (notificationPermissionRequested) return
+    
+    setNotificationPermissionRequested(true)
+    if (notificationService.isSupported()) {
+      await notificationService.requestPermission()
+    }
+  }
 
   useEffect(() => {
     if (profile && selectedUser) {
@@ -99,6 +112,19 @@ export default function MessagesPage() {
                 // メッセージが自分宛ての場合、既読にする
                 if (!newMessageData.is_read) {
                   await markAsRead(newMessageData.id)
+                }
+
+                // 通知を送信（ウィンドウがフォーカスされていない場合のみ）
+                if (!document.hasFocus() && notificationService.isPermissionGranted()) {
+                  notificationService.notifyNewMessage({
+                    senderName: messageWithProfiles.sender.full_name,
+                    content: messageWithProfiles.content,
+                    onClick: () => {
+                      // 通知クリック時の処理
+                      window.focus()
+                      scrollToBottom()
+                    }
+                  })
                 }
               }
             }

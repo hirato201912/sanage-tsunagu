@@ -12,6 +12,7 @@ import ScheduleForm from '@/components/ScheduleForm'
 import RecurringScheduleForm from '@/components/RecurringScheduleForm'
 import { formatRecurringSchedule } from '@/lib/schedule-utils'
 import type { RecurringSchedule } from '@/lib/supabase'
+import { notificationService } from '@/lib/notifications'
 
 // 日本語設定
 moment.locale('ja')
@@ -65,8 +66,75 @@ export default function SchedulePage() {
     if (profile) {
       fetchSchedules()
       fetchRecurringSchedules()
+      // 通知許可を要求
+      if (notificationService.isSupported()) {
+        notificationService.requestPermission()
+      }
+      // リマインダーチェックを開始
+      startReminderCheck()
     }
   }, [profile])
+
+  // 授業開始前の通知チェック（15分前と5分前）
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkUpcomingLessons()
+    }, 60000) // 1分ごとにチェック
+
+    return () => clearInterval(interval)
+  }, [schedules])
+
+  const checkUpcomingLessons = () => {
+    if (!profile || !notificationService.isPermissionGranted()) return
+
+    const now = new Date()
+    const nowTime = now.getTime()
+
+    schedules.forEach(schedule => {
+      // 今日の授業のみチェック
+      const lessonDate = new Date(schedule.lesson_date)
+      const lessonStart = new Date(`${schedule.lesson_date}T${schedule.start_time}`)
+      
+      if (lessonDate.toDateString() !== now.toDateString()) return
+      
+      const timeDiff = lessonStart.getTime() - nowTime
+      const minutesUntil = Math.floor(timeDiff / 60000)
+
+      // 15分前の通知
+      if (minutesUntil === 15) {
+        notificationService.notifyLessonReminder({
+          lessonTitle: `${schedule.subject}の授業`,
+          timeUntil: '15分',
+          onClick: () => {
+            window.focus()
+            // カレンダーの今日の表示に移動
+            setView(Views.DAY)
+            setDate(new Date())
+          }
+        })
+      }
+
+      // 5分前の通知
+      if (minutesUntil === 5) {
+        notificationService.notifyLessonReminder({
+          lessonTitle: `${schedule.subject}の授業`,
+          timeUntil: '5分',
+          onClick: () => {
+            window.focus()
+            setView(Views.DAY)
+            setDate(new Date())
+          }
+        })
+      }
+    })
+  }
+
+  const startReminderCheck = () => {
+    // 初回チェック
+    setTimeout(() => {
+      checkUpcomingLessons()
+    }, 1000)
+  }
 
   const fetchSchedules = async () => {
     try {

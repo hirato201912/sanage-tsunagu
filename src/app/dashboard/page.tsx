@@ -2,17 +2,57 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
 
 export default function DashboardPage() {
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
+  const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
     if (!loading && !user) {
       router.push('/login')
     }
   }, [user, loading, router])
+
+  useEffect(() => {
+    if (profile) {
+      fetchUnreadCount()
+      // リアルタイム更新
+      const channel = supabase
+        .channel('unread_messages')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${profile.id}`
+        }, () => {
+          fetchUnreadCount()
+        })
+        .subscribe()
+
+      return () => {
+        supabase.removeChannel(channel)
+      }
+    }
+  }, [profile])
+
+  const fetchUnreadCount = async () => {
+    if (!profile) return
+
+    try {
+      const { count } = await supabase
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('receiver_id', profile.id)
+        .eq('is_read', false)
+
+      setUnreadCount(count || 0)
+    } catch (error) {
+      console.error('Error fetching unread count:', error)
+    }
+  }
 
   if (loading) {
     return (
@@ -74,10 +114,19 @@ export default function DashboardPage() {
       </button>
       <button
         onClick={() => router.push('/messages')}
-        className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors"
+        className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors relative"
       >
-        <h3 className="font-medium text-green-900">メッセージ</h3>
-        <p className="text-sm text-green-700">生徒・講師のやりとり確認</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-medium text-green-900">メッセージ</h3>
+            <p className="text-sm text-green-700">生徒・講師のやりとり確認</p>
+          </div>
+          {unreadCount > 0 && (
+            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
+              {unreadCount}
+            </div>
+          )}
+        </div>
       </button>
       <button
         onClick={() => router.push('/instructors')}
@@ -109,10 +158,19 @@ export default function DashboardPage() {
       </button>
       <button
         onClick={() => router.push('/messages')}
-        className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors"
+        className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors relative"
       >
-        <h3 className="font-medium text-green-900">メッセージ</h3>
-        <p className="text-sm text-green-700">担当生徒とのやりとり</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-medium text-green-900">メッセージ</h3>
+            <p className="text-sm text-green-700">担当生徒とのやりとり</p>
+          </div>
+          {unreadCount > 0 && (
+            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
+              {unreadCount}
+            </div>
+          )}
+        </div>
       </button>
       <div className="bg-purple-50 p-4 rounded-lg">
         <h3 className="font-medium text-purple-900">担当生徒</h3>
@@ -134,10 +192,19 @@ export default function DashboardPage() {
       </button>
       <button
         onClick={() => router.push('/messages')}
-        className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors"
+        className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors relative"
       >
-        <h3 className="font-medium text-green-900">メッセージ</h3>
-        <p className="text-sm text-green-700">講師とのやりとり</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-medium text-green-900">メッセージ</h3>
+            <p className="text-sm text-green-700">講師とのやりとり</p>
+          </div>
+          {unreadCount > 0 && (
+            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
+              {unreadCount}
+            </div>
+          )}
+        </div>
       </button>
       <button
         onClick={() => router.push('/learning-records')}
