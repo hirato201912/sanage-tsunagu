@@ -104,7 +104,7 @@ export default function DashboardPage() {
 {profile.role === 'admin' && (
   <div className="bg-white shadow rounded-lg p-6">
     <h2 className="text-xl font-bold mb-4">塾長ダッシュボード</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       <button
         onClick={() => router.push('/schedule')}
         className="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors"
@@ -119,7 +119,7 @@ export default function DashboardPage() {
         <div className="flex justify-between items-start">
           <div>
             <h3 className="font-medium text-green-900">メッセージ</h3>
-            <p className="text-sm text-green-700">生徒・講師のやりとり確認</p>
+            <p className="text-sm text-green-700">直接メッセージの送受信</p>
           </div>
           {unreadCount > 0 && (
             <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
@@ -127,6 +127,13 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+      </button>
+      <button
+        onClick={() => router.push('/message-admin')}
+        className="bg-amber-50 hover:bg-amber-100 p-4 rounded-lg text-left transition-colors"
+      >
+        <h3 className="font-medium text-amber-900">メッセージ管理</h3>
+        <p className="text-sm text-amber-700">全ての会話を確認・管理</p>
       </button>
       <button
         onClick={() => router.push('/instructors')}

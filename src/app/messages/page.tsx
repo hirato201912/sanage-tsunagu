@@ -44,6 +44,13 @@ export default function MessagesPage() {
     }
   }, [profile])
 
+  // メッセージリストが更新された時に最新メッセージへスクロール
+  useEffect(() => {
+    if (messages.length > 0 && selectedUser) {
+      scrollToBottom()
+    }
+  }, [messages, selectedUser])
+
   const requestNotificationPermission = async () => {
     if (notificationPermissionRequested) return
     
@@ -231,7 +238,7 @@ export default function MessagesPage() {
         await markMultipleAsRead(messageIds)
       }
       
-      setTimeout(scrollToBottom, 100)
+      scrollToBottom()
       
     } catch (error) {
       console.error('Error fetching messages:', error)
@@ -271,16 +278,19 @@ export default function MessagesPage() {
   }
 
   const scrollToBottom = () => {
-    const messagesContainer = document.getElementById('messages-container')
-    if (messagesContainer) {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight
-    }
+    setTimeout(() => {
+      const messagesContainer = document.getElementById('messages-container')
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight
+      }
+    }, 100)
   }
 
   const handleUserSelect = async (user: ConversationUser) => {
     const userProfile = { id: user.id, full_name: user.full_name, role: user.role } as Profile
     setSelectedUser(userProfile)
     await fetchMessages(user.id)
+    scrollToBottom()
   }
 
   const sendMessage = async () => {
@@ -309,7 +319,7 @@ export default function MessagesPage() {
       // 送信したメッセージをすぐに表示に追加
       if (data && data[0]) {
         setMessages(prev => [...prev, data[0]])
-        setTimeout(scrollToBottom, 100)
+        scrollToBottom()
       }
 
       setNewMessage('')
