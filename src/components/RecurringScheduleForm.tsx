@@ -35,10 +35,18 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
     day_of_week: 1, // デフォルトは月曜日
     start_time: '14:00',
     end_time: '15:30',
-    start_date: new Date().toISOString().split('T')[0],
+    start_date: '',
     end_date: '',
     notes: ''
   })
+
+  // 日付の初期化をuseEffectで行う（クライアントサイドのみ）
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !formData.start_date) {
+      const today = new Date().toISOString().split('T')[0]
+      setFormData(prev => ({ ...prev, start_date: today }))
+    }
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -74,6 +82,8 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
     setLoading(true)
 
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
       const recurringData = {
         student_id: formData.student_id,
         instructor_id: formData.instructor_id || null,
@@ -85,7 +95,8 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
         start_date: formData.start_date,
         end_date: formData.end_date || null,
         is_active: true,
-        notes: formData.notes || null
+        notes: formData.notes || null,
+        created_by: user?.id
       }
 
       const { error } = await supabase
@@ -95,10 +106,10 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
       if (error) throw error
 
       // フォームリセット
-      setFormData({
+      const resetData = {
         student_id: '',
         instructor_id: profile?.role === 'instructor' ? profile.id : '',
-        lesson_type: 'video',
+        lesson_type: 'video' as 'video' | 'face_to_face',
         subject: '',
         day_of_week: 1,
         start_time: '14:00',
@@ -106,7 +117,8 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
         start_date: new Date().toISOString().split('T')[0],
         end_date: '',
         notes: ''
-      })
+      }
+      setFormData(resetData)
 
       onSuccess()
       onClose()

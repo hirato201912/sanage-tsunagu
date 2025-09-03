@@ -140,8 +140,8 @@ export default function SchedulePage() {
     try {
       let query = supabase.from('schedules').select(`
         *,
-        student:student_id(full_name),
-        instructor:instructor_id(full_name)
+        student:student_id(id, full_name, role),
+        instructor:instructor_id(id, full_name, role)
       `)
 
       // 役割別のフィルタリング
@@ -166,8 +166,8 @@ export default function SchedulePage() {
     try {
       let query = supabase.from('recurring_schedules').select(`
         *,
-        student:student_id(full_name),
-        instructor:instructor_id(full_name)
+        student:student_id(id, full_name, role),
+        instructor:instructor_id(id, full_name, role)
       `)
 
       // 役割別のフィルタリング
@@ -245,6 +245,18 @@ export default function SchedulePage() {
         let title = `${recurringSchedule.subject}（定期）`
         if (profile?.role !== 'student') {
           title += ` - ${(recurringSchedule as any).student?.full_name}`
+          
+          // 塾長の場合は作成者情報も表示
+          if (profile?.role === 'admin' && recurringSchedule.created_by) {
+            // created_byがstudent_idと一致する場合は生徒作成、instructor_idと一致する場合は講師作成、それ以外は塾長作成
+            if (recurringSchedule.created_by === recurringSchedule.student_id) {
+              title += ' [生徒作成]'
+            } else if (recurringSchedule.created_by === recurringSchedule.instructor_id) {
+              title += ' [講師作成]'
+            } else {
+              title += ' [塾長作成]'
+            }
+          }
         }
         if (profile?.role === 'student') {
           title += ` - ${(recurringSchedule as any).instructor?.full_name || '講師未定'}`
@@ -306,9 +318,26 @@ export default function SchedulePage() {
     let title = `${schedule.subject}`
     if (profile?.role !== 'student') {
       title += ` - ${(schedule as any).student?.full_name}`
+      
+      // 塾長の場合は作成者情報も表示
+      if (profile?.role === 'admin' && schedule.created_by) {
+        // created_byがstudent_idと一致する場合は生徒作成、instructor_idと一致する場合は講師作成、それ以外は塾長作成
+        if (schedule.created_by === schedule.student_id) {
+          title += ' [生徒作成]'
+        } else if (schedule.created_by === schedule.instructor_id) {
+          title += ' [講師作成]'
+        } else {
+          title += ' [塾長作成]'
+        }
+      }
     }
     if (profile?.role === 'student') {
-      title += ` - ${(schedule as any).instructor?.full_name || '講師未定'}`
+      const instructorName = (schedule as any).instructor?.full_name
+      if (schedule.lesson_type === 'video') {
+        title += instructorName ? ` - ${instructorName}` : ' - 映像授業'
+      } else {
+        title += ` - ${instructorName || '講師未定'}`
+      }
     }
 
       return {
@@ -386,8 +415,8 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* メインヘッダー */}
-          <div className="flex justify-between items-center py-6">
+          {/* デスクトップレイアウト */}
+          <div className="hidden md:flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <img 
                 src="/main_icon.png" 
@@ -412,8 +441,41 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
             </div>
           </div>
 
-          {/* アクションボタン行（塾長・講師のみ表示） */}
-          {(profile?.role === 'admin' || profile?.role === 'instructor') && (
+          {/* モバイルレイアウト */}
+          <div className="md:hidden py-4">
+            {/* タイトル部分 */}
+            <div className="flex items-center space-x-3 mb-3">
+              <img 
+                src="/main_icon.png" 
+                alt="ツナグ" 
+                className="h-10 w-10 flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                  スケジュール
+                </h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  授業予定の確認・管理
+                </p>
+              </div>
+            </div>
+
+            {/* ボタン部分 */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md transition-colors bg-gray-50 hover:bg-gray-100 w-full max-w-xs"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="text-sm font-medium">ダッシュボード</span>
+              </button>
+            </div>
+          </div>
+
+          {/* アクションボタン行 */}
+          {(profile?.role === 'admin' || profile?.role === 'instructor' || profile?.role === 'student') && (
             <div className="border-t border-gray-200 py-4">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center space-x-3">
@@ -424,33 +486,39 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    <span>単発予約</span>
+                    <span>{profile?.role === 'student' ? '予定追加' : '単発予約'}</span>
                   </button>
-                  <button
-                    onClick={() => setShowRecurringForm(true)}
-                    className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all hover:shadow-md"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    <span>定期スケジュール</span>
-                  </button>
+                  {(profile?.role === 'admin' || profile?.role === 'instructor') && (
+                    <button
+                      onClick={() => setShowRecurringForm(true)}
+                      className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all hover:shadow-md"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span>定期スケジュール</span>
+                    </button>
+                  )}
                 </div>
-                <div className="border-l border-gray-300 h-8 mx-2"></div>
-                <button
-                  onClick={() => setShowRecurringList(!showRecurringList)}
-                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    showRecurringList 
-                      ? 'bg-gray-800 text-white shadow-md' 
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700 hover:shadow-sm'
-                  }`}
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z" />
-                  </svg>
-                  <span>定期一覧 {showRecurringList ? '非表示' : '表示'}</span>
-                </button>
+                {(profile?.role === 'admin' || profile?.role === 'instructor') && (
+                  <>
+                    <div className="border-l border-gray-300 h-8 mx-2"></div>
+                    <button
+                      onClick={() => setShowRecurringList(!showRecurringList)}
+                      className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                        showRecurringList 
+                          ? 'bg-gray-800 text-white shadow-md' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700 hover:shadow-sm'
+                      }`}
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2H9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z" />
+                      </svg>
+                      <span>定期一覧 {showRecurringList ? '非表示' : '表示'}</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           )}

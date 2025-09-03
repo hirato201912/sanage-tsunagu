@@ -104,7 +104,7 @@ export default function DashboardPage() {
 {profile.role === 'admin' && (
   <div className="bg-white shadow rounded-lg p-6">
     <h2 className="text-xl font-bold mb-4">塾長ダッシュボード</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       <button
         onClick={() => router.push('/schedule')}
         className="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors"
@@ -148,6 +148,13 @@ export default function DashboardPage() {
       >
         <h3 className="font-medium text-orange-900">生徒管理</h3>
         <p className="text-sm text-orange-700">生徒の登録・管理</p>
+      </button>
+      <button
+        onClick={() => router.push('/learning-admin')}
+        className="bg-indigo-50 hover:bg-indigo-100 p-4 rounded-lg text-left transition-colors"
+      >
+        <h3 className="font-medium text-indigo-900">学習記録管理</h3>
+        <p className="text-sm text-indigo-700">全生徒の学習状況を確認</p>
       </button>
     </div>
   </div>

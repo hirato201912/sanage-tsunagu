@@ -31,6 +31,7 @@ export type Schedule = {
   instructor_id?: string
   status: 'scheduled' | 'completed' | 'cancelled'
   notes?: string
+  created_by?: string
   created_at: string
 }
 
@@ -57,6 +58,7 @@ export type RecurringSchedule = {
   end_date?: string
   is_active: boolean
   notes?: string
+  created_by?: string
   created_at: string
 }
 

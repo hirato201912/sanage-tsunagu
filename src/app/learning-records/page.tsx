@@ -52,10 +52,14 @@ export default function LearningRecordsPage() {
       
       let studentId = profile?.id
       
-      // 講師・管理者の場合は、特定の生徒のデータを取得する必要がある場合は後で実装
-      // 今回は生徒自身のデータのみ取得
-      if (profile?.role !== 'student') {
-        // 講師・管理者用の処理は後で実装
+      // 塾長の場合は専用管理画面へリダイレクト
+      if (profile?.role === 'admin') {
+        router.push('/learning-admin')
+        return
+      }
+      
+      // 講師の場合は担当生徒の記録を表示（今回は実装を簡素化し、生徒のみアクセス可能とする）
+      if (profile?.role === 'instructor') {
         setIsLoading(false)
         return
       }
@@ -188,14 +192,30 @@ export default function LearningRecordsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">アクセス権限がありません</h2>
-          <p className="text-gray-600 mb-4">学習記録機能は生徒のみ利用可能です。</p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="text-blue-600 hover:text-blue-800"
-          >
-            ダッシュボードに戻る
-          </button>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">
+            {profile.role === 'admin' ? '管理者専用ページへ移動中...' : 'アクセス権限がありません'}
+          </h2>
+          <p className="text-gray-600 mb-4">
+            {profile.role === 'admin' 
+              ? '塾長は学習記録管理ページをご利用ください。' 
+              : '学習記録機能は生徒のみ利用可能です。'}
+          </p>
+          <div className="space-x-4">
+            {profile.role === 'admin' && (
+              <button
+                onClick={() => router.push('/learning-admin')}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                学習記録管理へ
+              </button>
+            )}
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="text-blue-600 hover:text-blue-800"
+            >
+              ダッシュボードに戻る
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -205,7 +225,8 @@ export default function LearningRecordsPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          {/* デスクトップレイアウト */}
+          <div className="hidden md:flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <img 
                 src="/main_icon.png" 
@@ -221,6 +242,39 @@ export default function LearningRecordsPage() {
               <button
                 onClick={() => router.push('/dashboard')}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="text-sm font-medium">ダッシュボード</span>
+              </button>
+            </div>
+          </div>
+
+          {/* モバイルレイアウト */}
+          <div className="md:hidden py-4">
+            {/* タイトル部分 */}
+            <div className="flex items-center space-x-3 mb-3">
+              <img 
+                src="/main_icon.png" 
+                alt="ツナグ" 
+                className="h-10 w-10 flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                  学習記録
+                </h1>
+                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                  自宅学習・テスト結果の<br className="sm:hidden" />記録・管理
+                </p>
+              </div>
+            </div>
+
+            {/* ボタン部分 */}
+            <div className="flex justify-center">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md transition-colors bg-gray-50 hover:bg-gray-100 w-full max-w-xs"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -381,36 +435,80 @@ export default function LearningRecordsPage() {
                     まだ学習記録がありません。「学習記録を追加」ボタンから記録を始めましょう。
                   </div>
                 ) : (
-                  <div className="overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日付</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">科目</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学習時間</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">内容</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {studySessions.map((session) => (
-                          <tr key={session.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {new Date(session.study_date).toLocaleDateString('ja-JP')}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {session.subject}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {formatDuration(session.duration_minutes)}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-900">
-                              {session.notes || '-'}
-                            </td>
+                  <>
+                    {/* デスクトップ表示（テーブル） */}
+                    <div className="hidden md:block overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日付</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">科目</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学習時間</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">内容</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {studySessions.map((session) => (
+                            <tr key={session.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {new Date(session.study_date).toLocaleDateString('ja-JP')}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {session.subject}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {formatDuration(session.duration_minutes)}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                <div className="truncate" title={session.notes || '-'}>
+                                  {session.notes || '-'}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* モバイル表示（カード） */}
+                    <div className="md:hidden space-y-4 p-4">
+                      {studySessions.map((session) => (
+                        <div key={session.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  {session.subject}
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                <span className="flex items-center">
+                                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  {new Date(session.study_date).toLocaleDateString('ja-JP')}
+                                </span>
+                                <span className="flex items-center">
+                                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  {formatDuration(session.duration_minutes)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          {session.notes && (
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                              <div className="text-sm text-gray-700">
+                                <div className="font-medium text-gray-900 mb-1">学習内容：</div>
+                                <div className="whitespace-pre-wrap break-words">{session.notes}</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -439,50 +537,103 @@ export default function LearningRecordsPage() {
                     まだテスト結果がありません。「テスト結果を追加」ボタンから記録を始めましょう。
                   </div>
                 ) : (
-                  <div className="overflow-hidden">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日付</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">テスト名</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">科目</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">点数</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">得点率</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">備考</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {testResults.map((result) => (
-                          <tr key={result.id}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {new Date(result.test_date).toLocaleDateString('ja-JP')}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {result.test_name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {result.subject}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {result.score}点 / {result.max_score}点
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                result.percentage >= 80 ? 'bg-green-100 text-green-800' :
-                                result.percentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {result.percentage}%
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-900">
-                              {result.notes || '-'}
-                            </td>
+                  <>
+                    {/* デスクトップ表示（テーブル） */}
+                    <div className="hidden md:block overflow-hidden">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日付</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">テスト名</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">科目</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">点数</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">得点率</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">備考</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {testResults.map((result) => (
+                            <tr key={result.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {new Date(result.test_date).toLocaleDateString('ja-JP')}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {result.test_name}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {result.subject}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {result.score}点 / {result.max_score}点
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  result.percentage >= 80 ? 'bg-green-100 text-green-800' :
+                                  result.percentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {result.percentage}%
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                                <div className="truncate" title={result.notes || '-'}>
+                                  {result.notes || '-'}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* モバイル表示（カード） */}
+                    <div className="md:hidden space-y-4 p-4">
+                      {testResults.map((result) => (
+                        <div key={result.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  {result.subject}
+                                </span>
+                              </div>
+                              <div className="text-sm font-medium text-gray-900 mb-2">
+                                {result.test_name}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center text-sm text-gray-600">
+                                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  {new Date(result.test_date).toLocaleDateString('ja-JP')}
+                                </span>
+                                <div className="text-right">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {result.score}点 / {result.max_score}点
+                                  </div>
+                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    result.percentage >= 80 ? 'bg-green-100 text-green-800' :
+                                    result.percentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-red-100 text-red-800'
+                                  }`}>
+                                    {result.percentage}%
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {result.notes && (
+                            <div className="mt-3 pt-3 border-t border-gray-100">
+                              <div className="text-sm text-gray-700">
+                                <div className="font-medium text-gray-900 mb-1">備考：</div>
+                                <div className="whitespace-pre-wrap break-words">{result.notes}</div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             </div>

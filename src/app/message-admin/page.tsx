@@ -204,7 +204,8 @@ export default function MessageAdminPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          {/* デスクトップレイアウト */}
+          <div className="hidden md:flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <img 
                 src="/main_icon.png" 
@@ -229,6 +230,48 @@ export default function MessageAdminPage() {
               <button
                 onClick={() => router.push('/dashboard')}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span className="text-sm font-medium">ダッシュボード</span>
+              </button>
+            </div>
+          </div>
+
+          {/* モバイルレイアウト */}
+          <div className="md:hidden py-4">
+            {/* タイトル部分 */}
+            <div className="flex items-center space-x-3 mb-4">
+              <img 
+                src="/main_icon.png" 
+                alt="ツナグ" 
+                className="h-10 w-10 flex-shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                  メッセージ管理
+                </h1>
+                <p className="text-sm text-gray-600 mt-1">
+                  全ての会話を確認・管理
+                </p>
+              </div>
+            </div>
+
+            {/* ボタン部分 */}
+            <div className="flex flex-col space-y-2">
+              <button
+                onClick={() => router.push('/messages')}
+                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors bg-gray-50 hover:bg-gray-100"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <span className="text-sm font-medium">通常メッセージ</span>
+              </button>
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors bg-gray-50 hover:bg-gray-100"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />

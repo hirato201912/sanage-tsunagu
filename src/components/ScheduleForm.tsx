@@ -19,15 +19,27 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
   const [instructors, setInstructors] = useState<Profile[]>([])
 
   const [formData, setFormData] = useState({
-    student_id: '',
+    student_id: profile?.role === 'student' ? profile.id : '',
     instructor_id: profile?.role === 'instructor' ? profile.id : '',
     lesson_type: 'video' as 'video' | 'face_to_face',
     subject: '',
-    lesson_date: initialDate ? initialDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    lesson_date: '',
     start_time: '14:00',
     end_time: '15:30',
     notes: ''
   })
+
+  // 日付の初期化をuseEffectで行う（クライアントサイドのみ）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (initialDate) {
+        setFormData(prev => ({ ...prev, lesson_date: initialDate.toISOString().split('T')[0] }))
+      } else if (!formData.lesson_date) {
+        const today = new Date().toISOString().split('T')[0]
+        setFormData(prev => ({ ...prev, lesson_date: today }))
+      }
+    }
+  }, [initialDate])
 
   useEffect(() => {
     if (isOpen) {
@@ -72,6 +84,8 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
     setLoading(true)
 
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
       const { error } = await supabase
         .from('schedules')
         .insert([{
@@ -83,22 +97,24 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
           start_time: formData.start_time,
           end_time: formData.end_time,
           status: 'scheduled',
-          notes: formData.notes || null
+          notes: formData.notes || null,
+          created_by: user?.id
         }])
 
       if (error) throw error
 
       // フォームリセット
-      setFormData({
-        student_id: '',
+      const resetData = {
+        student_id: profile?.role === 'student' ? profile.id : '',
         instructor_id: profile?.role === 'instructor' ? profile.id : '',
-        lesson_type: 'video',
+        lesson_type: 'video' as 'video' | 'face_to_face',
         subject: '',
         lesson_date: initialDate ? initialDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         start_time: '14:00',
         end_time: '15:30',
         notes: ''
-      })
+      }
+      setFormData(resetData)
 
       onSuccess()
       onClose()
@@ -120,7 +136,9 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-screen overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">スケジュール作成</h2>
+          <h2 className="text-xl font-bold">
+            {profile?.role === 'student' ? '予定の追加' : 'スケジュール作成'}
+          </h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -130,33 +148,39 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 生徒選択 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              生徒 *
-            </label>
-            <select
-              required
-              value={formData.student_id}
-              onChange={(e) => handleChange('student_id', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">生徒を選択してください</option>
-              {students.map((student) => (
-                <option key={student.id} value={student.id}>
-                  {student.full_name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 講師選択（塾長の場合のみ） */}
-          {profile?.role === 'admin' && (
+          {/* 生徒選択（塾長・講師の場合のみ） */}
+          {(profile?.role === 'admin' || profile?.role === 'instructor') && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                講師
+                生徒 *
               </label>
               <select
+                required
+                value={formData.student_id}
+                onChange={(e) => handleChange('student_id', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">生徒を選択してください</option>
+                {students.map((student) => (
+                  <option key={student.id} value={student.id}>
+                    {student.full_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* 講師選択（塾長・生徒の場合のみ） */}
+          {(profile?.role === 'admin' || profile?.role === 'student') && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                講師{profile?.role === 'student' && formData.lesson_type === 'face_to_face' ? ' *' : ''}
+                {formData.lesson_type === 'video' && (
+                  <span className="text-xs text-gray-500 ml-1">（映像授業の場合は任意）</span>
+                )}
+              </label>
+              <select
+                required={profile?.role === 'student' && formData.lesson_type === 'face_to_face'}
                 value={formData.instructor_id}
                 onChange={(e) => handleChange('instructor_id', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
