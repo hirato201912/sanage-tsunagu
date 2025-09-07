@@ -29,7 +29,7 @@ export type Schedule = {
   start_time: string
   end_time: string
   instructor_id?: string
-  status: 'scheduled' | 'completed' | 'cancelled'
+  status: 'scheduled' | 'cancelled'
   notes?: string
   created_by?: string
   created_at: string
@@ -40,6 +40,8 @@ export type Message = {
   sender_id: string
   receiver_id: string
   content: string
+  image_url?: string
+  image_filename?: string
   is_read: boolean
   read_at?: string
   created_at: string

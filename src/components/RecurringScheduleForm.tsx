@@ -160,7 +160,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               required
               value={formData.student_id}
               onChange={(e) => handleChange('student_id', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
             >
               <option value="">生徒を選択してください</option>
               {students.map((student) => (
@@ -180,7 +180,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               <select
                 value={formData.instructor_id}
                 onChange={(e) => handleChange('instructor_id', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
               >
                 <option value="">講師を選択してください</option>
                 {instructors.map((instructor) => (
@@ -201,7 +201,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               required
               value={formData.lesson_type}
               onChange={(e) => handleChange('lesson_type', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
             >
               <option value="video">映像授業</option>
               <option value="face_to_face">対面授業</option>
@@ -219,7 +219,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               value={formData.subject}
               onChange={(e) => handleChange('subject', e.target.value)}
               placeholder="例：数学、英語、物理"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
             />
           </div>
 
@@ -232,7 +232,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               required
               value={formData.day_of_week}
               onChange={(e) => handleChange('day_of_week', Number(e.target.value))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
             >
               {DAYS_OF_WEEK.map((day) => (
                 <option key={day.value} value={day.value}>
@@ -252,7 +252,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               required
               value={formData.start_time}
               onChange={(e) => handleChange('start_time', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
             />
           </div>
 
@@ -266,7 +266,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               required
               value={formData.end_time}
               onChange={(e) => handleChange('end_time', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
             />
           </div>
 
@@ -280,7 +280,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               required
               value={formData.start_date}
               onChange={(e) => handleChange('start_date', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
             />
             <p className="text-xs text-gray-500 mt-1">定期スケジュールが開始される日付</p>
           </div>
@@ -295,7 +295,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               value={formData.end_date}
               onChange={(e) => handleChange('end_date', e.target.value)}
               min={formData.start_date}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
             />
             <p className="text-xs text-gray-500 mt-1">空白の場合は無期限で継続</p>
           </div>
@@ -310,7 +310,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               onChange={(e) => handleChange('notes', e.target.value)}
               placeholder="定期授業の詳細や注意事項など"
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
             />
           </div>
 
@@ -319,14 +319,14 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="flex-1 px-4 py-2.5 border border-[#8DCCB3]/30 rounded-lg text-[#4A5568] hover:bg-[#8DCCB3]/10 hover:border-[#8DCCB3]/50 transition-all duration-200 font-medium"
             >
               キャンセル
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 bg-[#B8E0D0] text-[#4A5568] rounded-lg hover:bg-[#8DCCB3] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               {loading ? '作成中...' : '定期スケジュール作成'}
             </button>

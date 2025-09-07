@@ -382,9 +382,6 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
       backgroundColor = '#f59e0b' // 対面授業（オレンジ）
     }
 
-    if (schedule.status === 'completed') {
-      backgroundColor = '#6b7280' // 完了（グレー）
-    }
     // キャンセルされた授業は表示しない（削除扱い）
 
     return {
@@ -413,7 +410,7 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-lg">
+      <header className="bg-white shadow-sm border-b-2 border-[#8DCCB3]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* デスクトップレイアウト */}
           <div className="hidden md:flex justify-between items-center py-6">
@@ -424,14 +421,14 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
                 className="h-12 w-12"
               />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">スケジュール</h1>
+                <h1 className="text-3xl font-bold text-[#8DCCB3]">スケジュール</h1>
                 <p className="text-sm text-gray-600 mt-1">授業予定の確認・管理</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors"
+                className="flex items-center space-x-2 text-gray-600 hover:text-[#8DCCB3] px-4 py-2 rounded-lg transition-all duration-200 border border-gray-200 hover:border-[#8DCCB3]/30 hover:bg-[#8DCCB3]/5"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -451,7 +448,7 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
                 className="h-10 w-10 flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-xl font-bold text-[#8DCCB3] leading-tight">
                   スケジュール
                 </h1>
                 <p className="text-sm text-gray-600 mt-1">
@@ -464,7 +461,7 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
             <div className="flex justify-center">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md transition-colors bg-gray-50 hover:bg-gray-100 w-full max-w-xs"
+                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-[#8DCCB3] px-4 py-2 rounded-lg transition-all duration-200 bg-[#8DCCB3]/5 hover:bg-[#8DCCB3]/10 border border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40 w-full max-w-xs shadow-sm hover:shadow-md"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -476,12 +473,12 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
 
           {/* アクションボタン行 */}
           {(profile?.role === 'admin' || profile?.role === 'instructor' || profile?.role === 'student') && (
-            <div className="border-t border-gray-200 py-4">
+            <div className="border-t border-[#8DCCB3]/20 py-4">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={handleCreateNew}
-                    className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all hover:shadow-md"
+                    className="flex items-center space-x-2 bg-[#8DCCB3] hover:bg-[#5FA084] text-white px-5 py-3 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -491,7 +488,7 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
                   {(profile?.role === 'admin' || profile?.role === 'instructor') && (
                     <button
                       onClick={() => setShowRecurringForm(true)}
-                      className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all hover:shadow-md"
+                      className="flex items-center space-x-2 bg-[#B8E0D0] hover:bg-[#8DCCB3] text-[#4A5568] hover:text-white px-5 py-3 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -502,13 +499,13 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
                 </div>
                 {(profile?.role === 'admin' || profile?.role === 'instructor') && (
                   <>
-                    <div className="border-l border-gray-300 h-8 mx-2"></div>
+                    <div className="border-l border-[#8DCCB3]/30 h-8 mx-2"></div>
                     <button
                       onClick={() => setShowRecurringList(!showRecurringList)}
-                      className={`flex items-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      className={`flex items-center space-x-2 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                         showRecurringList 
-                          ? 'bg-gray-800 text-white shadow-md' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-700 hover:shadow-sm'
+                          ? 'bg-[#8DCCB3] text-white shadow-lg' 
+                          : 'bg-white hover:bg-[#8DCCB3]/10 text-[#4A5568] hover:text-[#8DCCB3] border border-[#8DCCB3]/20 hover:border-[#8DCCB3]/50 shadow-sm hover:shadow-md'
                       }`}
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -529,25 +526,33 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
         <div className="px-4 py-6 sm:px-0">
           {/* 定期スケジュール一覧（トグル表示） */}
           {showRecurringList && (
-            <div className="bg-white shadow rounded-lg p-4 mb-6">
-              <h3 className="text-lg font-medium mb-4">定期スケジュール一覧</h3>
+            <div className="bg-white shadow-lg rounded-lg p-6 mb-6 border border-[#8DCCB3]/10">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-1 h-6 bg-[#8DCCB3] rounded-full"></div>
+                <h3 className="text-lg font-semibold text-[#4A5568]">定期スケジュール一覧</h3>
+              </div>
               {recurringSchedules.length === 0 ? (
-                <p className="text-gray-500">定期スケジュールが登録されていません。</p>
+                <div className="text-center py-8">
+                  <svg className="mx-auto h-12 w-12 text-[#8DCCB3]/50 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3a1 1 0 011-1h6a1 1 0 011 1v4h3a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1V8a1 1 0 011-1h3z" />
+                  </svg>
+                  <p className="text-gray-500">定期スケジュールが登録されていません。</p>
+                </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {recurringSchedules.map((schedule) => (
-                    <div key={schedule.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                    <div key={schedule.id} className="flex justify-between items-center p-4 bg-gradient-to-r from-[#8DCCB3]/5 to-[#B8E0D0]/5 rounded-lg border border-[#8DCCB3]/10 hover:shadow-md transition-all duration-200">
                       <div>
-                        <span className="font-medium">
+                        <span className="font-medium text-[#4A5568]">
                           {formatRecurringSchedule(schedule)}
                         </span>
                         {profile?.role !== 'student' && (
-                          <span className="ml-2 text-sm text-gray-600">
+                          <span className="ml-2 text-sm text-[#6B7280]">
                             - {(schedule as any).student?.full_name}
                           </span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-[#8DCCB3] font-medium">
                         {schedule.start_date} 〜 {schedule.end_date || '無期限'}
                       </div>
                     </div>
@@ -558,27 +563,115 @@ ${schedule.notes ? `備考: ${schedule.notes}` : ''}
           )}
 
           {/* 凡例 */}
-          <div className="mb-4 flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-green-500 rounded mr-2"></div>
-              <span>映像授業</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-yellow-500 rounded mr-2"></div>
-              <span>対面授業</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-gray-500 rounded mr-2"></div>
-              <span>完了</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-4 h-4 bg-blue-500 border-2 border-indigo-600 rounded mr-2"></div>
-              <span>定期スケジュール</span>
+          <div className="mb-6 bg-white rounded-lg shadow-sm p-4 border border-[#8DCCB3]/10">
+            <h3 className="text-sm font-medium text-[#4A5568] mb-3">授業タイプ</h3>
+            <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-[#10b981] rounded mr-2 shadow-sm"></div>
+                <span className="text-gray-700">映像授業</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-[#f59e0b] rounded mr-2 shadow-sm"></div>
+                <span className="text-gray-700">対面授業</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-4 h-4 bg-[#8DCCB3] border-2 border-[#5FA084] rounded mr-2 shadow-sm"></div>
+                <span className="text-gray-700">定期スケジュール</span>
+              </div>
             </div>
           </div>
 
           {/* カレンダー */}
-          <div className="bg-white rounded-lg shadow p-4">
+          <div className="bg-white rounded-lg shadow-lg p-6 border border-[#8DCCB3]/10">
+            <style jsx global>{`
+              .rbc-toolbar {
+                margin-bottom: 20px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                align-items: center;
+                justify-content: space-between;
+              }
+              
+              .rbc-toolbar button {
+                background: white !important;
+                color: #4A5568 !important;
+                border: 1px solid #8DCCB3 !important;
+                border-radius: 8px !important;
+                padding: 8px 16px !important;
+                font-size: 14px !important;
+                font-weight: 500 !important;
+                transition: all 0.2s ease !important;
+                box-shadow: 0 1px 2px 0 rgba(141, 204, 179, 0.05) !important;
+              }
+              
+              .rbc-toolbar button:hover {
+                background: #8DCCB3 !important;
+                color: white !important;
+                border-color: #5FA084 !important;
+                box-shadow: 0 4px 6px -1px rgba(141, 204, 179, 0.2) !important;
+                transform: translateY(-1px) !important;
+              }
+              
+              .rbc-toolbar button.rbc-active,
+              .rbc-toolbar button:active {
+                background: #8DCCB3 !important;
+                color: white !important;
+                border-color: #5FA084 !important;
+                box-shadow: 0 2px 4px 0 rgba(141, 204, 179, 0.2) !important;
+              }
+              
+              .rbc-toolbar-label {
+                color: #8DCCB3 !important;
+                font-size: 18px !important;
+                font-weight: 600 !important;
+                margin: 0 16px !important;
+              }
+              
+              .rbc-btn-group {
+                display: flex;
+                gap: 4px;
+              }
+              
+              .rbc-btn-group button {
+                margin: 0 !important;
+              }
+              
+              .rbc-btn-group button:first-child {
+                border-radius: 8px 4px 4px 8px !important;
+              }
+              
+              .rbc-btn-group button:last-child {
+                border-radius: 4px 8px 8px 4px !important;
+              }
+              
+              .rbc-btn-group button:only-child {
+                border-radius: 8px !important;
+              }
+              
+              @media (max-width: 640px) {
+                .rbc-toolbar {
+                  flex-direction: column;
+                  align-items: stretch;
+                  gap: 8px;
+                }
+                
+                .rbc-toolbar-label {
+                  text-align: center;
+                  order: -1;
+                  margin: 0 0 8px 0 !important;
+                }
+                
+                .rbc-btn-group {
+                  justify-content: center;
+                }
+                
+                .rbc-toolbar button {
+                  padding: 10px 12px !important;
+                  font-size: 13px !important;
+                }
+              }
+            `}</style>
             <Calendar
               localizer={localizer}
               events={events}

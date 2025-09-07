@@ -4,6 +4,21 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { 
+  MdDashboard, 
+  MdCalendarToday, 
+  MdMessage, 
+  MdSupervisorAccount, 
+  MdSchool, 
+  MdAnalytics, 
+  MdSettings,
+  MdNotifications,
+  MdTrendingUp,
+  MdEventNote,
+  MdManageAccounts,
+  MdChat,
+  MdPlayCircleOutline
+} from 'react-icons/md'
 
 export default function DashboardPage() {
   const { user, profile, loading, signOut } = useAuth()
@@ -73,7 +88,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+      <header className="bg-white shadow-sm border-b-2 border-[#8DCCB3]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-3">
@@ -82,15 +97,15 @@ export default function DashboardPage() {
                 alt="ツナグ" 
                 className="h-12 w-12"
               />
-              <h1 className="text-3xl font-bold text-gray-900">ツナグ</h1>
+              <h1 className="text-3xl font-bold text-[#8DCCB3]">ツナグ</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-700">
+              <span className="text-gray-600 font-medium">
                 {profile.full_name}さん ({profile.role === 'admin' ? '塾長' : profile.role === 'instructor' ? '講師' : '生徒'})
               </span>
               <button
                 onClick={handleSignOut}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 ログアウト
               </button>
@@ -102,131 +117,377 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
 {profile.role === 'admin' && (
-  <div className="bg-white shadow rounded-lg p-6">
-    <h2 className="text-xl font-bold mb-4">塾長ダッシュボード</h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-      <button
-        onClick={() => router.push('/schedule')}
-        className="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors"
-      >
-        <h3 className="font-medium text-blue-900">スケジュール管理</h3>
-        <p className="text-sm text-blue-700">全体のスケジュール確認・管理</p>
-      </button>
-      <button
-        onClick={() => router.push('/messages')}
-        className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors relative"
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-medium text-green-900">メッセージ</h3>
-            <p className="text-sm text-green-700">直接メッセージの送受信</p>
-          </div>
-          {unreadCount > 0 && (
-            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
-              {unreadCount}
+  <div className="flex flex-col lg:flex-row gap-6">
+    {/* サイドバー */}
+    <div className="w-full lg:w-80">
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
+          <MdDashboard className="mr-2 text-[#8DCCB3]" />
+          塾長メニュー
+        </h2>
+        
+        <div className="space-y-3">
+          {/* 管理カテゴリ */}
+          <div className="border-l-4 border-[#8DCCB3] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdManageAccounts className="mr-2 text-[#8DCCB3]" size={16} />
+              管理
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/schedule')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdCalendarToday className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">スケジュール管理</div>
+                  <div className="text-xs text-gray-500">授業予定の確認・調整</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+              
+              <button
+                onClick={() => router.push('/instructors')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdSupervisorAccount className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">講師管理</div>
+                  <div className="text-xs text-gray-500">講師の登録・情報管理</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+              
+              <button
+                onClick={() => router.push('/students')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdSchool className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">生徒管理</div>
+                  <div className="text-xs text-gray-500">生徒の登録・情報管理</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
             </div>
-          )}
+          </div>
+
+          {/* コミュニケーションカテゴリ */}
+          <div className="border-l-4 border-[#B8E0D0] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdChat className="mr-2 text-[#8DCCB3]" size={16} />
+              コミュニケーション
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/messages')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md relative"
+              >
+                <MdMessage className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">メッセージ</div>
+                  <div className="text-xs text-gray-500">直接メッセージの送受信</div>
+                </div>
+                {unreadCount > 0 && (
+                  <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold mr-2">
+                    {unreadCount}
+                  </div>
+                )}
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+              
+              <button
+                onClick={() => router.push('/message-admin')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdNotifications className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">全体メッセージ管理</div>
+                  <div className="text-xs text-gray-500">全ての会話を確認・管理</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+            </div>
+          </div>
+
+          {/* 分析カテゴリ */}
+          <div className="border-l-4 border-[#5FA084] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdAnalytics className="mr-2 text-[#8DCCB3]" size={16} />
+              分析
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/learning-admin')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdAnalytics className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">学習記録分析</div>
+                  <div className="text-xs text-gray-500">全生徒の学習状況把握</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+            </div>
+          </div>
         </div>
-      </button>
-      <button
-        onClick={() => router.push('/message-admin')}
-        className="bg-amber-50 hover:bg-amber-100 p-4 rounded-lg text-left transition-colors"
-      >
-        <h3 className="font-medium text-amber-900">メッセージ管理</h3>
-        <p className="text-sm text-amber-700">全ての会話を確認・管理</p>
-      </button>
-      <button
-        onClick={() => router.push('/instructors')}
-        className="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-left transition-colors"
-      >
-        <h3 className="font-medium text-purple-900">講師管理</h3>
-        <p className="text-sm text-purple-700">講師の登録・管理</p>
-      </button>
-      <button
-        onClick={() => router.push('/students')}
-        className="bg-orange-50 hover:bg-orange-100 p-4 rounded-lg text-left transition-colors"
-      >
-        <h3 className="font-medium text-orange-900">生徒管理</h3>
-        <p className="text-sm text-orange-700">生徒の登録・管理</p>
-      </button>
-      <button
-        onClick={() => router.push('/learning-admin')}
-        className="bg-indigo-50 hover:bg-indigo-100 p-4 rounded-lg text-left transition-colors"
-      >
-        <h3 className="font-medium text-indigo-900">学習記録管理</h3>
-        <p className="text-sm text-indigo-700">全生徒の学習状況を確認</p>
-      </button>
+      </div>
+    </div>
+
+    {/* メインエリア */}
+    <div className="flex-1">
+      <div className="bg-white shadow rounded-lg p-6 border-t-4 border-[#8DCCB3]">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+          <MdEventNote className="mr-2 text-[#8DCCB3]" />
+          本日の授業予定
+        </h3>
+        <div className="space-y-3">
+          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
+            <div className="w-2 h-2 bg-[#8DCCB3] rounded-full mr-3"></div>
+            <div>
+              <div className="font-medium text-gray-800">14:00 - 数学</div>
+              <div className="text-sm text-gray-600">田中太郎 - 教室A</div>
+            </div>
+          </div>
+          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
+            <div className="w-2 h-2 bg-[#B8E0D0] rounded-full mr-3"></div>
+            <div>
+              <div className="font-medium text-gray-800">16:00 - 英語</div>
+              <div className="text-sm text-gray-600">佐藤花子 - 教室B</div>
+            </div>
+          </div>
+          <button 
+            onClick={() => router.push('/schedule')}
+            className="w-full text-center py-3 text-[#8DCCB3] hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 text-sm font-medium border border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40"
+          >
+            全ての予定を表示 →
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 )}
 {profile.role === 'instructor' && (
-  <div className="bg-white shadow rounded-lg p-6">
-    <h2 className="text-xl font-bold mb-4">講師ダッシュボード</h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <button
-        onClick={() => router.push('/schedule')}
-        className="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors"
-      >
-        <h3 className="font-medium text-blue-900">授業スケジュール</h3>
-        <p className="text-sm text-blue-700">今日の授業予定確認</p>
-      </button>
-      <button
-        onClick={() => router.push('/messages')}
-        className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors relative"
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-medium text-green-900">メッセージ</h3>
-            <p className="text-sm text-green-700">担当生徒とのやりとり</p>
-          </div>
-          {unreadCount > 0 && (
-            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
-              {unreadCount}
+  <div className="flex flex-col lg:flex-row gap-6">
+    {/* 講師サイドバー */}
+    <div className="w-full lg:w-80">
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
+          <MdSupervisorAccount className="mr-2 text-[#8DCCB3]" />
+          講師メニュー
+        </h2>
+        
+        <div className="space-y-3">
+          {/* 授業カテゴリ */}
+          <div className="border-l-4 border-[#8DCCB3] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdCalendarToday className="mr-2 text-[#8DCCB3]" size={16} />
+              授業
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/schedule')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdCalendarToday className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">授業スケジュール</div>
+                  <div className="text-xs text-gray-500">今日の授業予定確認</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
             </div>
-          )}
+          </div>
+
+          {/* コミュニケーションカテゴリ */}
+          <div className="border-l-4 border-[#B8E0D0] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdChat className="mr-2 text-[#8DCCB3]" size={16} />
+              コミュニケーション
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/messages')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdMessage className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">メッセージ</div>
+                  <div className="text-xs text-gray-500">担当生徒とのやりとり</div>
+                </div>
+                {unreadCount > 0 && (
+                  <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold mr-2">
+                    {unreadCount}
+                  </div>
+                )}
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+            </div>
+          </div>
         </div>
-      </button>
-      <div className="bg-purple-50 p-4 rounded-lg">
-        <h3 className="font-medium text-purple-900">担当生徒</h3>
-        <p className="text-sm text-purple-700">担当生徒の状況確認</p>
+      </div>
+    </div>
+
+    {/* 講師メインエリア */}
+    <div className="flex-1">
+      <div className="bg-white shadow rounded-lg p-6 border-t-4 border-[#8DCCB3]">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+          <MdSchool className="mr-2 text-[#8DCCB3]" />
+          担当生徒の状況
+        </h3>
+        <div className="space-y-3">
+          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
+            <div className="w-2 h-2 bg-[#8DCCB3] rounded-full mr-3"></div>
+            <div>
+              <div className="font-medium text-gray-800">田中太郎 - 数学</div>
+              <div className="text-sm text-gray-600">次回: 明日 14:00</div>
+            </div>
+          </div>
+          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
+            <div className="w-2 h-2 bg-[#B8E0D0] rounded-full mr-3"></div>
+            <div>
+              <div className="font-medium text-gray-800">佐藤花子 - 英語</div>
+              <div className="text-sm text-gray-600">次回: 木曜 16:00</div>
+            </div>
+          </div>
+          <button 
+            onClick={() => router.push('/students')}
+            className="w-full text-center py-3 text-[#8DCCB3] hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 text-sm font-medium border border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40"
+          >
+            全ての担当生徒を表示 →
+          </button>
+        </div>
       </div>
     </div>
   </div>
 )}
 {profile.role === 'student' && (
-  <div className="bg-white shadow rounded-lg p-6">
-    <h2 className="text-xl font-bold mb-4">生徒ダッシュボード</h2>
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <button
-        onClick={() => router.push('/schedule')}
-        className="bg-blue-50 hover:bg-blue-100 p-4 rounded-lg text-left transition-colors"
-      >
-        <h3 className="font-medium text-blue-900">今日の授業</h3>
-        <p className="text-sm text-blue-700">本日の予定を確認</p>
-      </button>
-      <button
-        onClick={() => router.push('/messages')}
-        className="bg-green-50 hover:bg-green-100 p-4 rounded-lg text-left transition-colors relative"
-      >
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-medium text-green-900">メッセージ</h3>
-            <p className="text-sm text-green-700">講師とのやりとり</p>
-          </div>
-          {unreadCount > 0 && (
-            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
-              {unreadCount}
+  <div className="flex flex-col lg:flex-row gap-6">
+    {/* 生徒サイドバー */}
+    <div className="w-full lg:w-80">
+      <div className="bg-white shadow rounded-lg p-6">
+        <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
+          <MdSchool className="mr-2 text-[#8DCCB3]" />
+          生徒メニュー
+        </h2>
+        
+        <div className="space-y-3">
+          {/* 学習カテゴリ */}
+          <div className="border-l-4 border-[#8DCCB3] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdCalendarToday className="mr-2 text-[#8DCCB3]" size={16} />
+              学習
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/schedule')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdCalendarToday className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">今日の授業</div>
+                  <div className="text-xs text-gray-500">本日の予定を確認</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+              
+              <button
+                onClick={() => router.push('/learning-records')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdAnalytics className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">学習記録</div>
+                  <div className="text-xs text-gray-500">学習状況を記録</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
             </div>
-          )}
+          </div>
+
+          {/* 映像授業カテゴリ */}
+          <div className="border-l-4 border-[#5FA084] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdPlayCircleOutline className="mr-2 text-[#8DCCB3]" size={16} />
+              映像授業
+            </h3>
+            <div className="space-y-2">
+              <div className="bg-gradient-to-r from-[#8DCCB3]/10 to-[#B8E0D0]/10 p-4 rounded-lg border border-[#8DCCB3]/20">
+                <h4 className="text-sm font-medium text-gray-800 mb-3 text-center">ブロードバンド予備校</h4>
+                <div className="flex justify-center mb-3">
+                  <img 
+                    src="/qr_bby.png" 
+                    alt="ブロードバンド予備校QRコード"
+                    className="w-32 h-32 border-2 border-white rounded-lg shadow-md"
+                  />
+                </div>
+                <p className="text-xs text-gray-600 text-center leading-relaxed">
+                  iPadでQRコードを読み取って<br />
+                  映像授業にアクセス
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* コミュニケーションカテゴリ */}
+          <div className="border-l-4 border-[#B8E0D0] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdChat className="mr-2 text-[#8DCCB3]" size={16} />
+              コミュニケーション
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/messages')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdMessage className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">メッセージ</div>
+                  <div className="text-xs text-gray-500">講師とのやりとり</div>
+                </div>
+                {unreadCount > 0 && (
+                  <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold mr-2">
+                    {unreadCount}
+                  </div>
+                )}
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+            </div>
+          </div>
         </div>
-      </button>
-      <button
-        onClick={() => router.push('/learning-records')}
-        className="bg-purple-50 hover:bg-purple-100 p-4 rounded-lg text-left transition-colors"
-      >
-        <h3 className="font-medium text-purple-900">学習記録</h3>
-        <p className="text-sm text-purple-700">学習状況を記録</p>
-      </button>
+      </div>
+    </div>
+
+    {/* 生徒メインエリア */}
+    <div className="flex-1">
+      <div className="bg-white shadow rounded-lg p-6 border-t-4 border-[#8DCCB3]">
+        <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
+          <MdTrendingUp className="mr-2 text-[#8DCCB3]" />
+          学習状況
+        </h3>
+        <div className="space-y-3">
+          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
+            <div className="w-2 h-2 bg-[#8DCCB3] rounded-full mr-3"></div>
+            <div>
+              <div className="font-medium text-gray-800">今週の学習時間</div>
+              <div className="text-sm text-gray-600">12時間 / 目標15時間</div>
+            </div>
+          </div>
+          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
+            <div className="w-2 h-2 bg-[#B8E0D0] rounded-full mr-3"></div>
+            <div>
+              <div className="font-medium text-gray-800">次回授業予定</div>
+              <div className="text-sm text-gray-600">明日 14:00 - 数学</div>
+            </div>
+          </div>
+          <button 
+            onClick={() => router.push('/learning-records')}
+            className="w-full text-center py-3 text-[#8DCCB3] hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 text-sm font-medium border border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40"
+          >
+            詳しい学習記録を確認 →
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 )}

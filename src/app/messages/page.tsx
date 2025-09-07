@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Message, Profile } from '@/lib/supabase'
 import { notificationService } from '@/lib/notifications'
+import { compressImage, validateImageFile, generateImagePath } from '@/lib/image-utils'
 
 interface MessageWithProfiles extends Message {
   sender: Profile
@@ -29,6 +30,9 @@ export default function MessagesPage() {
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null)
   const [availableUsers, setAvailableUsers] = useState<ConversationUser[]>([])
   const [notificationPermissionRequested, setNotificationPermissionRequested] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -293,15 +297,106 @@ export default function MessagesPage() {
     scrollToBottom()
   }
 
+  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // ファイルバリデーション
+    const validationError = validateImageFile(file)
+    if (validationError) {
+      alert(validationError)
+      return
+    }
+
+    try {
+      // 画像圧縮
+      const compressedFile = await compressImage(file, {
+        maxWidth: 800,
+        maxHeight: 600,
+        quality: 0.8,
+        maxSizeKB: 300
+      })
+
+      setSelectedImage(compressedFile)
+      
+      // プレビュー用URL生成
+      const previewUrl = URL.createObjectURL(compressedFile)
+      setImagePreview(previewUrl)
+      
+      console.log(`圧縮完了: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`)
+    } catch (error) {
+      console.error('Image compression error:', error)
+      alert('画像の圧縮に失敗しました')
+    }
+  }
+
+  const removeSelectedImage = () => {
+    setSelectedImage(null)
+    if (imagePreview) {
+      URL.revokeObjectURL(imagePreview)
+      setImagePreview(null)
+    }
+  }
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (!profile) return null
+
+    try {
+      // 認証状態を確認
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      console.log('Auth user:', user)
+      console.log('Profile:', profile)
+      
+      if (authError) {
+        console.error('Auth error:', authError)
+        throw authError
+      }
+
+      const imagePath = generateImagePath(profile.id, file.name)
+      console.log('Upload path:', imagePath)
+      
+      const { error: uploadError } = await supabase.storage
+        .from('message-images')
+        .upload(imagePath, file)
+
+      if (uploadError) {
+        console.error('Upload error details:', uploadError)
+        throw uploadError
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('message-images')
+        .getPublicUrl(imagePath)
+
+      return urlData.publicUrl
+    } catch (error) {
+      console.error('Image upload error:', error)
+      throw error
+    }
+  }
+
   const sendMessage = async () => {
-    if (!newMessage.trim() || sending || !profile || !selectedUser) return
+    if ((!newMessage.trim() && !selectedImage) || sending || !profile || !selectedUser) return
 
     setSending(true)
+    setUploadingImage(true)
+    
     try {
+      let imageUrl = null
+      let imageFilename = null
+
+      // 画像がある場合はアップロード
+      if (selectedImage) {
+        imageUrl = await uploadImage(selectedImage)
+        imageFilename = selectedImage.name
+      }
+
       const messageData = {
         sender_id: profile.id,
         receiver_id: selectedUser.id,
-        content: newMessage.trim(),
+        content: newMessage.trim() || (selectedImage ? '画像を送信しました' : ''),
+        image_url: imageUrl,
+        image_filename: imageFilename,
         is_read: false
       }
 
@@ -323,11 +418,13 @@ export default function MessagesPage() {
       }
 
       setNewMessage('')
+      removeSelectedImage()
     } catch (error) {
       console.error('Error sending message:', error)
       alert('メッセージの送信に失敗しました')
     } finally {
       setSending(false)
+      setUploadingImage(false)
     }
   }
 
@@ -575,9 +672,40 @@ export default function MessagesPage() {
                             ? 'bg-blue-100 ml-auto' 
                             : 'bg-gray-100'
                         }`}>
-                          <div className="text-gray-900 whitespace-pre-wrap">
-                            {message.content}
-                          </div>
+                          {/* 画像がある場合は表示 */}
+                          {message.image_url && (
+                            <div className="mb-2">
+                              <img 
+                                src={message.image_url} 
+                                alt={message.image_filename || '送信された画像'}
+                                className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => {
+                                  // 画像をクリックすると新しいタブで開く
+                                  window.open(message.image_url, '_blank')
+                                }}
+                                onError={(e) => {
+                                  // 画像読み込みエラー時の表示
+                                  const target = e.target as HTMLImageElement
+                                  target.style.display = 'none'
+                                  const errorDiv = document.createElement('div')
+                                  errorDiv.className = 'text-red-500 text-sm p-2 border border-red-200 rounded'
+                                  errorDiv.textContent = '画像を読み込めませんでした'
+                                  target.parentNode?.insertBefore(errorDiv, target)
+                                }}
+                              />
+                              {message.image_filename && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  📎 {message.image_filename}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {/* テキストメッセージ */}
+                          {message.content && (
+                            <div className="text-gray-900 whitespace-pre-wrap">
+                              {message.content}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -588,6 +716,32 @@ export default function MessagesPage() {
               {/* メッセージ入力 */}
               {selectedUser && (
                 <div className="p-4 border-t bg-gray-50">
+                  {/* 画像プレビュー */}
+                  {imagePreview && (
+                    <div className="mb-3 relative inline-block">
+                      <img 
+                        src={imagePreview} 
+                        alt="選択された画像のプレビュー" 
+                        className="max-w-48 max-h-32 rounded-lg border border-gray-300"
+                      />
+                      <button
+                        onClick={removeSelectedImage}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+                        title="画像を削除"
+                      >
+                        ×
+                      </button>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {selectedImage && (
+                          <>
+                            <span>{(selectedImage.size / 1024).toFixed(0)}KB</span>
+                            <span className="ml-2 text-green-600">✅ 最適化済み</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex space-x-3">
                     <div className="flex-1">
                       <textarea
@@ -604,28 +758,49 @@ export default function MessagesPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                       />
                     </div>
-                    <button
-                      onClick={sendMessage}
-                      disabled={!newMessage.trim() || sending}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 self-start flex items-center space-x-2"
-                    >
-                      {sending ? (
-                        <>
-                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          <span>送信中...</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                          </svg>
-                          <span>送信</span>
-                        </>
-                      )}
-                    </button>
+                    
+                    <div className="flex flex-col space-y-2">
+                      {/* 画像選択ボタン */}
+                      <label className="cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-md text-sm flex items-center space-x-1 transition-colors">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span>画像</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                          disabled={uploadingImage}
+                        />
+                      </label>
+                      
+                      {/* 送信ボタン */}
+                      <button
+                        onClick={sendMessage}
+                        disabled={(!newMessage.trim() && !selectedImage) || sending}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2 transition-colors"
+                      >
+                        {sending ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span className="text-sm">
+                              {uploadingImage ? 'アップロード中...' : '送信中...'}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                            </svg>
+                            <span className="text-sm">送信</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

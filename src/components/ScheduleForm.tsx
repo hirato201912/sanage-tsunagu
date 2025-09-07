@@ -141,9 +141,11 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-400 hover:text-[#8DCCB3] p-1 rounded-lg hover:bg-[#8DCCB3]/10 transition-all duration-200"
           >
-            ✕
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -158,7 +160,7 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
                 required
                 value={formData.student_id}
                 onChange={(e) => handleChange('student_id', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
               >
                 <option value="">生徒を選択してください</option>
                 {students.map((student) => (
@@ -170,30 +172,6 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
             </div>
           )}
 
-          {/* 講師選択（塾長・生徒の場合のみ） */}
-          {(profile?.role === 'admin' || profile?.role === 'student') && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                講師{profile?.role === 'student' && formData.lesson_type === 'face_to_face' ? ' *' : ''}
-                {formData.lesson_type === 'video' && (
-                  <span className="text-xs text-gray-500 ml-1">（映像授業の場合は任意）</span>
-                )}
-              </label>
-              <select
-                required={profile?.role === 'student' && formData.lesson_type === 'face_to_face'}
-                value={formData.instructor_id}
-                onChange={(e) => handleChange('instructor_id', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">講師を選択してください</option>
-                {instructors.map((instructor) => (
-                  <option key={instructor.id} value={instructor.id}>
-                    {instructor.full_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {/* 授業タイプ */}
           <div>
@@ -287,14 +265,14 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="flex-1 px-4 py-2.5 border border-[#8DCCB3]/30 rounded-lg text-[#4A5568] hover:bg-[#8DCCB3]/10 hover:border-[#8DCCB3]/50 transition-all duration-200 font-medium"
             >
               キャンセル
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 px-4 py-2.5 bg-[#8DCCB3] text-white rounded-lg hover:bg-[#5FA084] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               {loading ? '作成中...' : '作成'}
             </button>
