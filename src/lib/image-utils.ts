@@ -87,24 +87,30 @@ export const compressImage = (
   })
 }
 
-export const validateImageFile = (file: File): string | null => {
+export const validateImageFile = (file: File): { isValid: boolean; error?: string } => {
   // ファイル形式チェック
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
   if (!allowedTypes.includes(file.type)) {
-    return '対応していない画像形式です。JPEG、PNG、WebPのみ対応しています。'
+    return { 
+      isValid: false, 
+      error: '対応していない画像形式です。JPEG、PNG、WebPのみ対応しています。' 
+    }
   }
 
   // ファイルサイズチェック（元画像は10MB以下）
   const maxSizeMB = 10
   if (file.size > maxSizeMB * 1024 * 1024) {
-    return `画像サイズが大きすぎます。${maxSizeMB}MB以下の画像を選択してください。`
+    return { 
+      isValid: false, 
+      error: `画像サイズが大きすぎます。${maxSizeMB}MB以下の画像を選択してください。` 
+    }
   }
 
-  return null
+  return { isValid: true }
 }
 
-export const generateImagePath = (userId: string, fileName: string): string => {
+export const generateImagePath = (fileName: string): string => {
   const timestamp = Date.now()
   const extension = fileName.split('.').pop() || 'jpg'
-  return `${userId}/${timestamp}.${extension}`
+  return `messages/${timestamp}.${extension}`
 }

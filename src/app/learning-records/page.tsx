@@ -5,6 +5,19 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { StudySession, TestResult } from '@/lib/supabase'
+import { 
+  MdAccessTime, 
+  MdAddCircle, 
+  MdCalendarToday, 
+  MdAssignment,
+  MdSchool,
+  MdTrendingUp,
+  MdClose,
+  MdPlayArrow,
+  MdPause,
+  MdStop,
+  MdRefresh
+} from 'react-icons/md'
 
 export default function LearningRecordsPage() {
   const { user, profile, loading } = useAuth()
@@ -16,21 +29,38 @@ export default function LearningRecordsPage() {
   const [showStudyForm, setShowStudyForm] = useState(false)
   const [showTestForm, setShowTestForm] = useState(false)
 
+  // ストップウォッチ用の状態
+  const [stopwatchTime, setStopwatchTime] = useState(0) // 経過時間（秒）
+  const [isStopwatchRunning, setIsStopwatchRunning] = useState(false)
+  const [stopwatchInterval, setStopwatchInterval] = useState<NodeJS.Timeout | null>(null)
+
   // 学習時間記録フォーム用の状態
-  const [studyFormData, setStudyFormData] = useState({
+  const [studyFormData, setStudyFormData] = useState<{
+    subject: string
+    study_date: string
+    duration_minutes: string
+    notes: string
+  }>({
     subject: '',
     study_date: new Date().toISOString().split('T')[0],
-    duration_minutes: 30,
+    duration_minutes: '',
     notes: ''
   })
 
   // テスト結果記録フォーム用の状態
-  const [testFormData, setTestFormData] = useState({
+  const [testFormData, setTestFormData] = useState<{
+    test_name: string
+    subject: string
+    test_date: string
+    score: string
+    max_score: string
+    notes: string
+  }>({
     test_name: '',
     subject: '',
     test_date: new Date().toISOString().split('T')[0],
-    score: 0,
-    max_score: 100,
+    score: '',
+    max_score: '',
     notes: ''
   })
 
@@ -102,7 +132,7 @@ export default function LearningRecordsPage() {
           student_id: profile?.id,
           subject: studyFormData.subject,
           study_date: studyFormData.study_date,
-          duration_minutes: studyFormData.duration_minutes,
+          duration_minutes: Number(studyFormData.duration_minutes),
           notes: studyFormData.notes || null
         }])
 
@@ -112,11 +142,12 @@ export default function LearningRecordsPage() {
       setStudyFormData({
         subject: '',
         study_date: new Date().toISOString().split('T')[0],
-        duration_minutes: 30,
+        duration_minutes: '',
         notes: ''
       })
 
       setShowStudyForm(false)
+      resetStopwatch() // ストップウォッチもリセット
       await fetchData()
       alert('学習記録を保存しました')
     } catch (error) {
@@ -132,6 +163,11 @@ export default function LearningRecordsPage() {
     setIsLoading(true)
 
     try {
+      // 得点率を自動計算
+      const score = Number(testFormData.score)
+      const maxScore = Number(testFormData.max_score)
+      const percentage = Math.round((score / maxScore) * 100)
+      
       const { error } = await supabase
         .from('test_results')
         .insert([{
@@ -139,8 +175,9 @@ export default function LearningRecordsPage() {
           test_name: testFormData.test_name,
           subject: testFormData.subject,
           test_date: testFormData.test_date,
-          score: testFormData.score,
-          max_score: testFormData.max_score,
+          score: score,
+          max_score: maxScore,
+          percentage: percentage,
           notes: testFormData.notes || null
         }])
 
@@ -151,8 +188,8 @@ export default function LearningRecordsPage() {
         test_name: '',
         subject: '',
         test_date: new Date().toISOString().split('T')[0],
-        score: 0,
-        max_score: 100,
+        score: '',
+        max_score: '',
         notes: ''
       })
 
@@ -176,10 +213,65 @@ export default function LearningRecordsPage() {
     return `${mins}分`
   }
 
+  // ストップウォッチの時間をフォーマット（HH:MM:SS形式）
+  const formatStopwatchTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  // ストップウォッチ開始
+  const startStopwatch = () => {
+    if (!isStopwatchRunning) {
+      setIsStopwatchRunning(true)
+      const interval = setInterval(() => {
+        setStopwatchTime(prev => prev + 1)
+      }, 1000)
+      setStopwatchInterval(interval)
+    }
+  }
+
+  // ストップウォッチ停止
+  const stopStopwatch = () => {
+    if (isStopwatchRunning && stopwatchInterval) {
+      setIsStopwatchRunning(false)
+      clearInterval(stopwatchInterval)
+      setStopwatchInterval(null)
+      
+      // 学習時間フィールドに自動入力（分単位）
+      const minutes = Math.ceil(stopwatchTime / 60)
+      setStudyFormData(prev => ({ ...prev, duration_minutes: minutes.toString() }))
+    }
+  }
+
+  // ストップウォッチリセット
+  const resetStopwatch = () => {
+    if (stopwatchInterval) {
+      clearInterval(stopwatchInterval)
+      setStopwatchInterval(null)
+    }
+    setIsStopwatchRunning(false)
+    setStopwatchTime(0)
+  }
+
+  // コンポーネントのクリーンアップ
+  useEffect(() => {
+    return () => {
+      if (stopwatchInterval) {
+        clearInterval(stopwatchInterval)
+      }
+    }
+  }, [stopwatchInterval])
+
   if (loading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>読み込み中...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex items-center space-x-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8DCCB3]"></div>
+          <span className="text-[#4A5568]">読み込み中...</span>
+        </div>
       </div>
     )
   }
@@ -190,28 +282,31 @@ export default function LearningRecordsPage() {
 
   if (profile.role !== 'student') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center border border-[#8DCCB3]/10">
+          <div className="mb-6">
+            <MdSchool className="mx-auto h-16 w-16 text-[#8DCCB3]/50" />
+          </div>
+          <h2 className="text-xl font-bold text-[#4A5568] mb-4">
             {profile.role === 'admin' ? '管理者専用ページへ移動中...' : 'アクセス権限がありません'}
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-gray-600 mb-6">
             {profile.role === 'admin' 
               ? '塾長は学習記録管理ページをご利用ください。' 
               : '学習記録機能は生徒のみ利用可能です。'}
           </p>
-          <div className="space-x-4">
+          <div className="flex flex-col space-y-3">
             {profile.role === 'admin' && (
               <button
                 onClick={() => router.push('/learning-admin')}
-                className="text-blue-600 hover:text-blue-800"
+                className="px-4 py-2 bg-[#8DCCB3] text-white rounded-lg hover:bg-[#5FA084] transition-all duration-200 font-medium"
               >
                 学習記録管理へ
               </button>
             )}
             <button
               onClick={() => router.push('/dashboard')}
-              className="text-blue-600 hover:text-blue-800"
+              className="px-4 py-2 border border-[#8DCCB3]/30 text-[#8DCCB3] rounded-lg hover:bg-[#8DCCB3]/10 transition-all duration-200 font-medium"
             >
               ダッシュボードに戻る
             </button>
@@ -223,7 +318,7 @@ export default function LearningRecordsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-lg">
+      <header className="bg-white shadow-sm border-b-2 border-[#8DCCB3]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* デスクトップレイアウト */}
           <div className="hidden md:flex justify-between items-center py-6">
@@ -234,14 +329,14 @@ export default function LearningRecordsPage() {
                 className="h-12 w-12"
               />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">学習記録</h1>
+                <h1 className="text-3xl font-bold text-[#8DCCB3]">学習記録</h1>
                 <p className="text-sm text-gray-600 mt-1">自宅学習・テスト結果の記録・管理</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors"
+                className="flex items-center space-x-2 text-gray-600 hover:text-[#8DCCB3] px-4 py-2 rounded-lg transition-all duration-200 border border-gray-200 hover:border-[#8DCCB3]/30 hover:bg-[#8DCCB3]/5"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -253,7 +348,6 @@ export default function LearningRecordsPage() {
 
           {/* モバイルレイアウト */}
           <div className="md:hidden py-4">
-            {/* タイトル部分 */}
             <div className="flex items-center space-x-3 mb-3">
               <img 
                 src="/main_icon.png" 
@@ -261,20 +355,18 @@ export default function LearningRecordsPage() {
                 className="h-10 w-10 flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                <h1 className="text-xl font-bold text-[#8DCCB3] leading-tight">
                   学習記録
                 </h1>
-                <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-                  自宅学習・テスト結果の<br className="sm:hidden" />記録・管理
+                <p className="text-sm text-gray-600 mt-1">
+                  自宅学習・テスト結果の記録
                 </p>
               </div>
             </div>
-
-            {/* ボタン部分 */}
             <div className="flex justify-center">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md transition-colors bg-gray-50 hover:bg-gray-100 w-full max-w-xs"
+                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-[#8DCCB3] px-4 py-2 rounded-lg transition-all duration-200 bg-[#8DCCB3]/5 hover:bg-[#8DCCB3]/10 border border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40 w-full max-w-xs shadow-sm hover:shadow-md"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -285,27 +377,33 @@ export default function LearningRecordsPage() {
           </div>
 
           {/* タブナビゲーション */}
-          <div className="border-t border-gray-200">
+          <div className="border-t border-[#8DCCB3]/20">
             <div className="flex space-x-8">
               <button
                 onClick={() => setActiveTab('study')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === 'study'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#8DCCB3] text-[#8DCCB3]'
+                    : 'border-transparent text-gray-500 hover:text-[#8DCCB3] hover:border-[#8DCCB3]/50'
                 }`}
               >
-                自宅学習記録
+                <div className="flex items-center space-x-2">
+                  <MdAccessTime size={18} />
+                  <span>学習記録</span>
+                </div>
               </button>
               <button
                 onClick={() => setActiveTab('tests')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
                   activeTab === 'tests'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-[#8DCCB3] text-[#8DCCB3]'
+                    : 'border-transparent text-gray-500 hover:text-[#8DCCB3] hover:border-[#8DCCB3]/50'
                 }`}
               >
-                テスト結果
+                <div className="flex items-center space-x-2">
+                  <MdAssignment size={18} />
+                  <span>テスト結果</span>
+                </div>
               </button>
             </div>
           </div>
@@ -314,201 +412,90 @@ export default function LearningRecordsPage() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {/* 統計サマリー */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
+          {/* 今月の学習時間サマリー（簡素化） */}
+          <div className="mb-6">
+            <div className="bg-white rounded-lg shadow-lg p-6 border border-[#8DCCB3]/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 bg-[#8DCCB3]/10 rounded-full flex items-center justify-center">
+                    <MdTrendingUp className="h-6 w-6 text-[#8DCCB3]" />
                   </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">今月の学習時間</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {formatDuration(
-                          studySessions
-                            .filter(session => {
-                              const sessionDate = new Date(session.study_date)
-                              const now = new Date()
-                              return sessionDate.getMonth() === now.getMonth() && 
-                                     sessionDate.getFullYear() === now.getFullYear()
-                            })
-                            .reduce((total, session) => total + session.duration_minutes, 0)
-                        )}
-                      </dd>
-                    </dl>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#4A5568]">今月の学習時間</h3>
+                    <p className="text-sm text-gray-600">継続して頑張りましょう！</p>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                      <svg className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-[#8DCCB3]">
+                    {formatDuration(
+                      studySessions
+                        .filter(session => {
+                          const sessionDate = new Date(session.study_date)
+                          const now = new Date()
+                          return sessionDate.getMonth() === now.getMonth() && 
+                                 sessionDate.getFullYear() === now.getFullYear()
+                        })
+                        .reduce((total, session) => total + session.duration_minutes, 0)
+                    )}
                   </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">総学習回数</dt>
-                      <dd className="text-lg font-medium text-gray-900">{studySessions.length}回</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <svg className="h-5 w-5 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">テスト受験回数</dt>
-                      <dd className="text-lg font-medium text-gray-900">{testResults.length}回</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="p-5">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                      <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt className="text-sm font-medium text-gray-500 truncate">平均得点率</dt>
-                      <dd className="text-lg font-medium text-gray-900">
-                        {testResults.length > 0 
-                          ? `${Math.round(testResults.reduce((sum, result) => sum + result.percentage, 0) / testResults.length)}%`
-                          : '0%'
-                        }
-                      </dd>
-                    </dl>
-                  </div>
+                  <div className="text-sm text-gray-500">月間合計</div>
                 </div>
               </div>
             </div>
           </div>
+
           {activeTab === 'study' && (
             <div>
               {/* 学習記録追加ボタン */}
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-900">自宅学習記録</h2>
+                <h2 className="text-xl font-bold text-[#4A5568] flex items-center space-x-2">
+                  <MdAccessTime className="text-[#8DCCB3]" />
+                  <span>学習記録</span>
+                </h2>
                 <button
                   onClick={() => setShowStudyForm(true)}
-                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all"
+                  className="flex items-center space-x-2 bg-[#8DCCB3] hover:bg-[#5FA084] text-white px-5 py-3 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
+                  <MdAddCircle className="h-5 w-5" />
                   <span>学習記録を追加</span>
                 </button>
               </div>
 
               {/* 学習記録一覧 */}
-              <div className="bg-white shadow rounded-lg">
+              <div className="bg-white shadow-lg rounded-lg border border-[#8DCCB3]/10">
                 {studySessions.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500">
-                    まだ学習記録がありません。「学習記録を追加」ボタンから記録を始めましょう。
+                  <div className="p-8 text-center">
+                    <MdAccessTime className="mx-auto h-16 w-16 text-[#8DCCB3]/50 mb-4" />
+                    <p className="text-gray-500 text-lg mb-2">まだ学習記録がありません</p>
+                    <p className="text-gray-400 text-sm">「学習記録を追加」ボタンから記録を始めましょう</p>
                   </div>
                 ) : (
-                  <>
-                    {/* デスクトップ表示（テーブル） */}
-                    <div className="hidden md:block overflow-hidden">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日付</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">科目</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">学習時間</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">内容</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {studySessions.map((session) => (
-                            <tr key={session.id}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {new Date(session.study_date).toLocaleDateString('ja-JP')}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div className="divide-y divide-gray-100">
+                    {studySessions.map((session, index) => (
+                      <div key={session.id} className={`p-6 ${index % 2 === 0 ? 'bg-white' : 'bg-[#8DCCB3]/5'} hover:bg-[#8DCCB3]/10 transition-all duration-200`}>
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#8DCCB3] text-white">
                                 {session.subject}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {formatDuration(session.duration_minutes)}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
-                                <div className="truncate" title={session.notes || '-'}>
-                                  {session.notes || '-'}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* モバイル表示（カード） */}
-                    <div className="md:hidden space-y-4 p-4">
-                      {studySessions.map((session) => (
-                        <div key={session.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  {session.subject}
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                                <span className="flex items-center">
-                                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                  </svg>
-                                  {new Date(session.study_date).toLocaleDateString('ja-JP')}
-                                </span>
-                                <span className="flex items-center">
-                                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
-                                  {formatDuration(session.duration_minutes)}
-                                </span>
-                              </div>
+                              </span>
+                              <span className="text-sm text-gray-500 flex items-center">
+                                <MdCalendarToday className="h-4 w-4 mr-1" />
+                                {new Date(session.study_date).toLocaleDateString('ja-JP')}
+                              </span>
                             </div>
+                            {session.notes && (
+                              <p className="text-gray-700 text-sm leading-relaxed">{session.notes}</p>
+                            )}
                           </div>
-                          {session.notes && (
-                            <div className="mt-3 pt-3 border-t border-gray-100">
-                              <div className="text-sm text-gray-700">
-                                <div className="font-medium text-gray-900 mb-1">学習内容：</div>
-                                <div className="whitespace-pre-wrap break-words">{session.notes}</div>
-                              </div>
-                            </div>
-                          )}
+                          <div className="flex items-center space-x-2 text-[#8DCCB3] bg-white px-4 py-2 rounded-lg border border-[#8DCCB3]/20">
+                            <MdAccessTime className="h-5 w-5" />
+                            <span className="font-semibold">{formatDuration(session.duration_minutes)}</span>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -518,122 +505,65 @@ export default function LearningRecordsPage() {
             <div>
               {/* テスト結果追加ボタン */}
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-900">テスト結果</h2>
+                <h2 className="text-xl font-bold text-[#4A5568] flex items-center space-x-2">
+                  <MdAssignment className="text-[#8DCCB3]" />
+                  <span>テスト結果</span>
+                </h2>
                 <button
                   onClick={() => setShowTestForm(true)}
-                  className="flex items-center space-x-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-sm transition-all"
+                  className="flex items-center space-x-2 bg-[#B8E0D0] hover:bg-[#8DCCB3] text-[#4A5568] hover:text-white px-5 py-3 rounded-lg text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
+                  <MdAddCircle className="h-5 w-5" />
                   <span>テスト結果を追加</span>
                 </button>
               </div>
 
               {/* テスト結果一覧 */}
-              <div className="bg-white shadow rounded-lg">
+              <div className="bg-white shadow-lg rounded-lg border border-[#8DCCB3]/10">
                 {testResults.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500">
-                    まだテスト結果がありません。「テスト結果を追加」ボタンから記録を始めましょう。
+                  <div className="p-8 text-center">
+                    <MdAssignment className="mx-auto h-16 w-16 text-[#8DCCB3]/50 mb-4" />
+                    <p className="text-gray-500 text-lg mb-2">まだテスト結果がありません</p>
+                    <p className="text-gray-400 text-sm">「テスト結果を追加」ボタンから記録を始めましょう</p>
                   </div>
                 ) : (
-                  <>
-                    {/* デスクトップ表示（テーブル） */}
-                    <div className="hidden md:block overflow-hidden">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日付</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">テスト名</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">科目</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">点数</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">得点率</th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">備考</th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {testResults.map((result) => (
-                            <tr key={result.id}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {new Date(result.test_date).toLocaleDateString('ja-JP')}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {result.test_name}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <div className="divide-y divide-gray-100">
+                    {testResults.map((result, index) => (
+                      <div key={result.id} className={`p-6 ${index % 2 === 0 ? 'bg-white' : 'bg-[#8DCCB3]/5'} hover:bg-[#8DCCB3]/10 transition-all duration-200`}>
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-3 md:space-y-0">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#8DCCB3] text-white">
                                 {result.subject}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {result.score}点 / {result.max_score}点
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  result.percentage >= 80 ? 'bg-green-100 text-green-800' :
-                                  result.percentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                                  'bg-red-100 text-red-800'
-                                }`}>
-                                  {result.percentage}%
-                                </span>
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
-                                <div className="truncate" title={result.notes || '-'}>
-                                  {result.notes || '-'}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* モバイル表示（カード） */}
-                    <div className="md:hidden space-y-4 p-4">
-                      {testResults.map((result) => (
-                        <div key={result.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                          <div className="flex justify-between items-start mb-3">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  {result.subject}
-                                </span>
-                              </div>
-                              <div className="text-sm font-medium text-gray-900 mb-2">
-                                {result.test_name}
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="flex items-center text-sm text-gray-600">
-                                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                  </svg>
-                                  {new Date(result.test_date).toLocaleDateString('ja-JP')}
-                                </span>
-                                <div className="text-right">
-                                  <div className="text-sm font-medium text-gray-900">
-                                    {result.score}点 / {result.max_score}点
-                                  </div>
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                    result.percentage >= 80 ? 'bg-green-100 text-green-800' :
-                                    result.percentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                  }`}>
-                                    {result.percentage}%
-                                  </span>
-                                </div>
-                              </div>
+                              </span>
+                              <span className="text-sm text-gray-500 flex items-center">
+                                <MdCalendarToday className="h-4 w-4 mr-1" />
+                                {new Date(result.test_date).toLocaleDateString('ja-JP')}
+                              </span>
                             </div>
+                            <h4 className="font-semibold text-[#4A5568] mb-1">{result.test_name}</h4>
+                            {result.notes && (
+                              <p className="text-gray-700 text-sm leading-relaxed">{result.notes}</p>
+                            )}
                           </div>
-                          {result.notes && (
-                            <div className="mt-3 pt-3 border-t border-gray-100">
-                              <div className="text-sm text-gray-700">
-                                <div className="font-medium text-gray-900 mb-1">備考：</div>
-                                <div className="whitespace-pre-wrap break-words">{result.notes}</div>
+                          <div className="flex flex-col space-y-2">
+                            <div className="bg-white px-4 py-2 rounded-lg border border-[#8DCCB3]/20 text-center">
+                              <div className="text-lg font-bold text-[#4A5568]">
+                                {result.score}点 / {result.max_score}点
                               </div>
                             </div>
-                          )}
+                            <span className={`inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-medium ${
+                              result.percentage >= 80 ? 'bg-green-100 text-green-800' :
+                              result.percentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {result.percentage}%
+                            </span>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             </div>
@@ -643,74 +573,141 @@ export default function LearningRecordsPage() {
 
       {/* 学習記録追加フォーム */}
       {showStudyForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">学習記録を追加</h3>
-              <button
-                onClick={() => setShowStudyForm(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-md border border-[#8DCCB3]/10">
+            <div className="px-6 py-4 border-b border-[#8DCCB3]/10">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-[#4A5568] flex items-center space-x-2">
+                  <MdAccessTime className="text-[#8DCCB3]" />
+                  <span>学習記録を追加</span>
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowStudyForm(false)
+                    resetStopwatch()
+                  }}
+                  className="text-gray-400 hover:text-[#8DCCB3] p-1 rounded-lg hover:bg-[#8DCCB3]/10 transition-all duration-200"
+                >
+                  <MdClose className="w-5 h-5" />
+                </button>
+              </div>
             </div>
-            <form onSubmit={handleStudySubmit} className="space-y-4">
+            <form onSubmit={handleStudySubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">科目 *</label>
+                <label className="block text-sm font-medium text-[#4A5568] mb-2">科目 *</label>
                 <input
                   type="text"
                   required
                   value={studyFormData.subject}
                   onChange={(e) => setStudyFormData({ ...studyFormData, subject: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="例：数学、英語"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
+                  placeholder="例：数学、英語、物理"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">学習日 *</label>
+                <label className="block text-sm font-medium text-[#4A5568] mb-2">学習日 *</label>
                 <input
                   type="date"
                   required
                   value={studyFormData.study_date}
                   onChange={(e) => setStudyFormData({ ...studyFormData, study_date: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
                 />
               </div>
+
+              {/* ストップウォッチセクション */}
+              <div className="bg-gradient-to-r from-[#8DCCB3]/10 to-[#B8E0D0]/10 p-6 rounded-xl border border-[#8DCCB3]/20">
+                <div className="text-center mb-4">
+                  <h4 className="text-lg font-semibold text-[#4A5568] mb-2 flex items-center justify-center space-x-2">
+                    <MdAccessTime className="text-[#8DCCB3]" />
+                    <span>学習タイマー</span>
+                  </h4>
+                  <div className="text-4xl font-mono font-bold text-[#8DCCB3] mb-4 bg-white px-6 py-3 rounded-lg shadow-inner border-2 border-[#8DCCB3]/20">
+                    {formatStopwatchTime(stopwatchTime)}
+                  </div>
+                </div>
+                
+                <div className="flex justify-center space-x-3">
+                  {!isStopwatchRunning ? (
+                    <button
+                      type="button"
+                      onClick={startStopwatch}
+                      className="flex items-center space-x-2 bg-[#8DCCB3] hover:bg-[#5FA084] text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                    >
+                      <MdPlayArrow className="h-5 w-5" />
+                      <span>開始</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={stopStopwatch}
+                      className="flex items-center space-x-2 bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                    >
+                      <MdStop className="h-5 w-5" />
+                      <span>停止</span>
+                    </button>
+                  )}
+                  
+                  <button
+                    type="button"
+                    onClick={resetStopwatch}
+                    className="flex items-center space-x-2 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5"
+                  >
+                    <MdRefresh className="h-5 w-5" />
+                    <span>リセット</span>
+                  </button>
+                </div>
+                
+                {stopwatchTime > 0 && (
+                  <div className="mt-4 text-center">
+                    <p className="text-sm text-[#4A5568]">
+                      停止すると <span className="font-semibold text-[#8DCCB3]">{Math.ceil(stopwatchTime / 60)}分</span> が学習時間に自動入力されます
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700">学習時間（分） *</label>
+                <label className="block text-sm font-medium text-[#4A5568] mb-2">学習時間（分） *</label>
                 <input
                   type="number"
                   required
                   min="1"
+                  step="1"
                   value={studyFormData.duration_minutes}
-                  onChange={(e) => setStudyFormData({ ...studyFormData, duration_minutes: Number(e.target.value) })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(e) => setStudyFormData({ ...studyFormData, duration_minutes: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
+                  placeholder="例：30, 60, 120（または上のタイマーを使用）"
                 />
+                <p className="text-xs text-gray-500 mt-1">上のタイマーを使うか、直接時間を入力してください</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">学習内容</label>
+                <label className="block text-sm font-medium text-[#4A5568] mb-2">学習内容</label>
                 <textarea
                   value={studyFormData.notes}
                   onChange={(e) => setStudyFormData({ ...studyFormData, notes: e.target.value })}
                   rows={3}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
                   placeholder="学習した内容や感想など"
                 />
               </div>
               <div className="flex space-x-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setShowStudyForm(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  onClick={() => {
+                    setShowStudyForm(false)
+                    resetStopwatch()
+                  }}
+                  className="flex-1 px-4 py-2.5 border border-[#8DCCB3]/30 rounded-lg text-[#4A5568] hover:bg-[#8DCCB3]/10 hover:border-[#8DCCB3]/50 transition-all duration-200 font-medium"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-[#8DCCB3] text-white rounded-lg hover:bg-[#5FA084] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  保存
+                  {isLoading ? '保存中...' : '保存'}
                 </button>
               </div>
             </form>
@@ -720,81 +717,90 @@ export default function LearningRecordsPage() {
 
       {/* テスト結果追加フォーム */}
       {showTestForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-medium">テスト結果を追加</h3>
-              <button
-                onClick={() => setShowTestForm(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-md border border-[#8DCCB3]/10">
+            <div className="px-6 py-4 border-b border-[#8DCCB3]/10">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-[#4A5568] flex items-center space-x-2">
+                  <MdAssignment className="text-[#8DCCB3]" />
+                  <span>テスト結果を追加</span>
+                </h3>
+                <button
+                  onClick={() => setShowTestForm(false)}
+                  className="text-gray-400 hover:text-[#8DCCB3] p-1 rounded-lg hover:bg-[#8DCCB3]/10 transition-all duration-200"
+                >
+                  <MdClose className="w-5 h-5" />
+                </button>
+              </div>
             </div>
-            <form onSubmit={handleTestSubmit} className="space-y-4">
+            <form onSubmit={handleTestSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">テスト名 *</label>
+                <label className="block text-sm font-medium text-[#4A5568] mb-2">テスト名 *</label>
                 <input
                   type="text"
                   required
                   value={testFormData.test_name}
                   onChange={(e) => setTestFormData({ ...testFormData, test_name: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                  placeholder="例：中間テスト、期末テスト"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
+                  placeholder="例：中間テスト、期末テスト、小テスト"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">科目 *</label>
+                <label className="block text-sm font-medium text-[#4A5568] mb-2">科目 *</label>
                 <input
                   type="text"
                   required
                   value={testFormData.subject}
                   onChange={(e) => setTestFormData({ ...testFormData, subject: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
-                  placeholder="例：数学、英語"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
+                  placeholder="例：数学、英語、物理"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">テスト日 *</label>
+                <label className="block text-sm font-medium text-[#4A5568] mb-2">テスト日 *</label>
                 <input
                   type="date"
                   required
                   value={testFormData.test_date}
                   onChange={(e) => setTestFormData({ ...testFormData, test_date: e.target.value })}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">得点 *</label>
+                  <label className="block text-sm font-medium text-[#4A5568] mb-2">得点 *</label>
                   <input
                     type="number"
                     required
                     min="0"
+                    step="0.5"
                     value={testFormData.score}
-                    onChange={(e) => setTestFormData({ ...testFormData, score: Number(e.target.value) })}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                    onChange={(e) => setTestFormData({ ...testFormData, score: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
+                    placeholder="例：85"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">満点 *</label>
+                  <label className="block text-sm font-medium text-[#4A5568] mb-2">満点 *</label>
                   <input
                     type="number"
                     required
                     min="1"
+                    step="0.5"
                     value={testFormData.max_score}
-                    onChange={(e) => setTestFormData({ ...testFormData, max_score: Number(e.target.value) })}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                    onChange={(e) => setTestFormData({ ...testFormData, max_score: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
+                    placeholder="例：100"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700">備考</label>
+                <label className="block text-sm font-medium text-[#4A5568] mb-2">備考</label>
                 <textarea
                   value={testFormData.notes}
                   onChange={(e) => setTestFormData({ ...testFormData, notes: e.target.value })}
                   rows={3}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200"
                   placeholder="テストの感想や反省点など"
                 />
               </div>
@@ -802,16 +808,16 @@ export default function LearningRecordsPage() {
                 <button
                   type="button"
                   onClick={() => setShowTestForm(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  className="flex-1 px-4 py-2.5 border border-[#8DCCB3]/30 rounded-lg text-[#4A5568] hover:bg-[#8DCCB3]/10 hover:border-[#8DCCB3]/50 transition-all duration-200 font-medium"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                  className="flex-1 px-4 py-2.5 bg-[#B8E0D0] text-[#4A5568] rounded-lg hover:bg-[#8DCCB3] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
-                  保存
+                  {isLoading ? '保存中...' : '保存'}
                 </button>
               </div>
             </form>

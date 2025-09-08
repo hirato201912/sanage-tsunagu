@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import type { Message, Profile } from '@/lib/supabase'
 import { notificationService } from '@/lib/notifications'
 import { compressImage, validateImageFile, generateImagePath } from '@/lib/image-utils'
+import { MdSend, MdImage, MdClose } from 'react-icons/md'
 
 interface MessageWithProfiles extends Message {
   sender: Profile
@@ -47,13 +48,6 @@ export default function MessagesPage() {
       requestNotificationPermission()
     }
   }, [profile])
-
-  // メッセージリストが更新された時に最新メッセージへスクロール
-  useEffect(() => {
-    if (messages.length > 0 && selectedUser) {
-      scrollToBottom()
-    }
-  }, [messages, selectedUser])
 
   const requestNotificationPermission = async () => {
     if (notificationPermissionRequested) return
@@ -242,7 +236,7 @@ export default function MessagesPage() {
         await markMultipleAsRead(messageIds)
       }
       
-      scrollToBottom()
+      setTimeout(scrollToBottom, 100)
       
     } catch (error) {
       console.error('Error fetching messages:', error)
@@ -282,96 +276,75 @@ export default function MessagesPage() {
   }
 
   const scrollToBottom = () => {
-    setTimeout(() => {
-      const messagesContainer = document.getElementById('messages-container')
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight
-      }
-    }, 100)
+    const messagesContainer = document.getElementById('messages-container')
+    if (messagesContainer) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight
+    }
   }
 
   const handleUserSelect = async (user: ConversationUser) => {
     const userProfile = { id: user.id, full_name: user.full_name, role: user.role } as Profile
     setSelectedUser(userProfile)
     await fetchMessages(user.id)
-    scrollToBottom()
   }
 
-  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (!file) return
 
-    // ファイルバリデーション
-    const validationError = validateImageFile(file)
-    if (validationError) {
-      alert(validationError)
+    const validationResult = validateImageFile(file)
+    if (!validationResult.isValid) {
+      alert(validationResult.error)
       return
     }
 
-    try {
-      // 画像圧縮
-      const compressedFile = await compressImage(file, {
-        maxWidth: 800,
-        maxHeight: 600,
-        quality: 0.8,
-        maxSizeKB: 300
-      })
-
-      setSelectedImage(compressedFile)
-      
-      // プレビュー用URL生成
-      const previewUrl = URL.createObjectURL(compressedFile)
-      setImagePreview(previewUrl)
-      
-      console.log(`圧縮完了: ${(file.size / 1024).toFixed(1)}KB → ${(compressedFile.size / 1024).toFixed(1)}KB`)
-    } catch (error) {
-      console.error('Image compression error:', error)
-      alert('画像の圧縮に失敗しました')
+    setSelectedImage(file)
+    
+    // プレビュー表示
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string)
     }
+    reader.readAsDataURL(file)
   }
 
   const removeSelectedImage = () => {
     setSelectedImage(null)
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview)
-      setImagePreview(null)
-    }
+    setImagePreview(null)
+    // ファイル入力をクリア
+    const fileInput = document.getElementById('image-input') as HTMLInputElement
+    if (fileInput) fileInput.value = ''
   }
 
-  const uploadImage = async (file: File): Promise<string | null> => {
-    if (!profile) return null
-
+  const uploadImage = async (file: File): Promise<{ url: string; originalSize: number; compressedSize: number }> => {
     try {
-      // 認証状態を確認
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      console.log('Auth user:', user)
-      console.log('Profile:', profile)
+      setUploadingImage(true)
       
-      if (authError) {
-        console.error('Auth error:', authError)
-        throw authError
-      }
-
-      const imagePath = generateImagePath(profile.id, file.name)
-      console.log('Upload path:', imagePath)
+      const originalSize = file.size
+      const compressedFile = await compressImage(file)
+      const compressedSize = compressedFile.size
+      const imagePath = generateImagePath(compressedFile.name)
       
-      const { error: uploadError } = await supabase.storage
+      const { data, error } = await supabase.storage
         .from('message-images')
-        .upload(imagePath, file)
+        .upload(imagePath, compressedFile)
 
-      if (uploadError) {
-        console.error('Upload error details:', uploadError)
-        throw uploadError
-      }
+      if (error) throw error
 
-      const { data: urlData } = supabase.storage
+      const { data: publicUrlData } = supabase.storage
         .from('message-images')
         .getPublicUrl(imagePath)
 
-      return urlData.publicUrl
+      return { 
+        url: publicUrlData.publicUrl,
+        originalSize,
+        compressedSize
+      }
     } catch (error) {
-      console.error('Image upload error:', error)
+      console.error('Error uploading image:', error)
       throw error
+    } finally {
+      setUploadingImage(false)
     }
   }
 
@@ -379,22 +352,23 @@ export default function MessagesPage() {
     if ((!newMessage.trim() && !selectedImage) || sending || !profile || !selectedUser) return
 
     setSending(true)
-    setUploadingImage(true)
-    
     try {
       let imageUrl = null
       let imageFilename = null
 
       // 画像がある場合はアップロード
       if (selectedImage) {
-        imageUrl = await uploadImage(selectedImage)
+        const uploadResult = await uploadImage(selectedImage)
+        imageUrl = uploadResult.url
         imageFilename = selectedImage.name
+        // サイズ情報をファイル名に含める形で保存
+        imageFilename = `${selectedImage.name}|${uploadResult.originalSize}|${uploadResult.compressedSize}`
       }
 
       const messageData = {
         sender_id: profile.id,
         receiver_id: selectedUser.id,
-        content: newMessage.trim() || (selectedImage ? '画像を送信しました' : ''),
+        content: newMessage.trim() || '画像を送信しました',
         image_url: imageUrl,
         image_filename: imageFilename,
         is_read: false
@@ -414,9 +388,10 @@ export default function MessagesPage() {
       // 送信したメッセージをすぐに表示に追加
       if (data && data[0]) {
         setMessages(prev => [...prev, data[0]])
-        scrollToBottom()
+        setTimeout(scrollToBottom, 100)
       }
 
+      // フォームリセット
       setNewMessage('')
       removeSelectedImage()
     } catch (error) {
@@ -424,7 +399,6 @@ export default function MessagesPage() {
       alert('メッセージの送信に失敗しました')
     } finally {
       setSending(false)
-      setUploadingImage(false)
     }
   }
 
@@ -467,6 +441,34 @@ export default function MessagesPage() {
     }
   }
 
+  const formatFileSizeKB = (bytes: number) => {
+    return Math.round(bytes / 1024) + 'KB'
+  }
+
+  const getImageSizeInfo = (message: MessageWithProfiles) => {
+    if (!message.image_filename || !message.image_filename.includes('|')) return null
+    try {
+      const parts = message.image_filename.split('|')
+      if (parts.length === 3) {
+        return {
+          original: parseInt(parts[1]),
+          compressed: parseInt(parts[2])
+        }
+      }
+    } catch {
+      return null
+    }
+    return null
+  }
+
+  const getImageDisplayName = (message: MessageWithProfiles) => {
+    if (!message.image_filename) return '画像'
+    if (message.image_filename.includes('|')) {
+      return message.image_filename.split('|')[0]
+    }
+    return message.image_filename
+  }
+
   if (loading || messagesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -483,8 +485,7 @@ export default function MessagesPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* デスクトップレイアウト */}
-          <div className="hidden md:flex justify-between items-center py-6">
+          <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
               <img 
                 src="/main_icon.png" 
@@ -500,39 +501,6 @@ export default function MessagesPage() {
               <button
                 onClick={() => router.push('/dashboard')}
                 className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span className="text-sm font-medium">ダッシュボード</span>
-              </button>
-            </div>
-          </div>
-
-          {/* モバイルレイアウト */}
-          <div className="md:hidden py-4">
-            {/* タイトル部分 */}
-            <div className="flex items-center space-x-3 mb-3">
-              <img 
-                src="/main_icon.png" 
-                alt="ツナグ" 
-                className="h-10 w-10 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-gray-900 leading-tight">
-                  メッセージ
-                </h1>
-                <p className="text-sm text-gray-600 mt-1">
-                  リアルタイム<br className="sm:hidden" />コミュニケーション
-                </p>
-              </div>
-            </div>
-
-            {/* ボタン部分 */}
-            <div className="flex justify-center">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-gray-900 px-4 py-2 rounded-md transition-colors bg-gray-50 hover:bg-gray-100 w-full max-w-xs"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -672,38 +640,36 @@ export default function MessagesPage() {
                             ? 'bg-blue-100 ml-auto' 
                             : 'bg-gray-100'
                         }`}>
-                          {/* 画像がある場合は表示 */}
+                          <div className="text-gray-900 whitespace-pre-wrap">
+                            {message.content}
+                          </div>
+                          {/* 画像表示 */}
                           {message.image_url && (
-                            <div className="mb-2">
-                              <img 
-                                src={message.image_url} 
-                                alt={message.image_filename || '送信された画像'}
-                                className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={() => {
-                                  // 画像をクリックすると新しいタブで開く
-                                  window.open(message.image_url, '_blank')
-                                }}
-                                onError={(e) => {
-                                  // 画像読み込みエラー時の表示
-                                  const target = e.target as HTMLImageElement
-                                  target.style.display = 'none'
-                                  const errorDiv = document.createElement('div')
-                                  errorDiv.className = 'text-red-500 text-sm p-2 border border-red-200 rounded'
-                                  errorDiv.textContent = '画像を読み込めませんでした'
-                                  target.parentNode?.insertBefore(errorDiv, target)
-                                }}
+                            <div className="mt-2">
+                              <img
+                                src={message.image_url}
+                                alt={message.image_filename || '添付画像'}
+                                className="max-w-full h-auto rounded cursor-pointer hover:opacity-90 transition-opacity border"
+                                onClick={() => window.open(message.image_url!, '_blank')}
                               />
-                              {message.image_filename && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  📎 {message.image_filename}
+                              <div className="mt-1 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                                <div className="flex items-center space-x-2">
+                                  <span>📷 {getImageDisplayName(message)}</span>
                                 </div>
-                              )}
-                            </div>
-                          )}
-                          {/* テキストメッセージ */}
-                          {message.content && (
-                            <div className="text-gray-900 whitespace-pre-wrap">
-                              {message.content}
+                                {(() => {
+                                  const sizeInfo = getImageSizeInfo(message)
+                                  if (sizeInfo) {
+                                    const compressionRatio = Math.round((1 - sizeInfo.compressed / sizeInfo.original) * 100)
+                                    return (
+                                      <div className="mt-1 text-xs text-gray-500">
+                                        {formatFileSizeKB(sizeInfo.original)} → {formatFileSizeKB(sizeInfo.compressed)} 
+                                        <span className="text-green-600 font-medium"> (-{compressionRatio}%)</span>
+                                      </div>
+                                    )
+                                  }
+                                  return <div className="mt-1 text-xs text-gray-500">圧縮済み</div>
+                                })()}
+                              </div>
                             </div>
                           )}
                         </div>
@@ -715,29 +681,27 @@ export default function MessagesPage() {
 
               {/* メッセージ入力 */}
               {selectedUser && (
-                <div className="p-4 border-t bg-gray-50">
+                <div className="p-4 border-t bg-gray-50 space-y-3">
                   {/* 画像プレビュー */}
                   {imagePreview && (
-                    <div className="mb-3 relative inline-block">
-                      <img 
-                        src={imagePreview} 
-                        alt="選択された画像のプレビュー" 
-                        className="max-w-48 max-h-32 rounded-lg border border-gray-300"
+                    <div className="relative inline-block">
+                      <img
+                        src={imagePreview}
+                        alt="アップロード予定の画像"
+                        className="max-w-xs max-h-32 rounded border"
                       />
                       <button
+                        type="button"
                         onClick={removeSelectedImage}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
-                        title="画像を削除"
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                       >
-                        ×
+                        <MdClose className="h-3 w-3" />
                       </button>
-                      <div className="text-xs text-gray-600 mt-1">
-                        {selectedImage && (
-                          <>
-                            <span>{(selectedImage.size / 1024).toFixed(0)}KB</span>
-                            <span className="ml-2 text-green-600">✅ 最適化済み</span>
-                          </>
-                        )}
+                      <div className="mt-1 p-2 bg-gray-50 rounded text-xs">
+                        <div className="text-gray-600">📷 {selectedImage?.name}</div>
+                        <div className="text-gray-500 mt-1">
+                          {formatFileSizeKB(selectedImage?.size || 0)} → 圧縮後送信
+                        </div>
                       </div>
                     </div>
                   )}
@@ -758,50 +722,47 @@ export default function MessagesPage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                       />
                     </div>
-                    
                     <div className="flex flex-col space-y-2">
                       {/* 画像選択ボタン */}
-                      <label className="cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-md text-sm flex items-center space-x-1 transition-colors">
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span>画像</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageSelect}
-                          className="hidden"
-                          disabled={uploadingImage}
-                        />
+                      <input
+                        id="image-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor="image-input"
+                        className="flex items-center justify-center w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-md cursor-pointer transition-colors"
+                        title="画像を添付"
+                      >
+                        <MdImage className="h-5 w-5" />
                       </label>
                       
                       {/* 送信ボタン */}
                       <button
                         onClick={sendMessage}
-                        disabled={(!newMessage.trim() && !selectedImage) || sending}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center space-x-2 transition-colors"
+                        disabled={(!newMessage.trim() && !selectedImage) || sending || uploadingImage}
+                        className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        title="送信"
                       >
-                        {sending ? (
-                          <>
-                            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span className="text-sm">
-                              {uploadingImage ? 'アップロード中...' : '送信中...'}
-                            </span>
-                          </>
+                        {(sending || uploadingImage) ? (
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
                         ) : (
-                          <>
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
-                            <span className="text-sm">送信</span>
-                          </>
+                          <MdSend className="h-5 w-5" />
                         )}
                       </button>
                     </div>
                   </div>
+                  
+                  {(sending || uploadingImage) && (
+                    <div className="text-sm text-blue-600">
+                      {uploadingImage ? '画像をアップロード中...' : 'メッセージを送信中...'}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
