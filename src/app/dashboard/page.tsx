@@ -228,6 +228,18 @@ export default function DashboardPage() {
                 </div>
                 <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
               </button>
+
+              <button
+                onClick={() => router.push('/test-scores')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdTrendingUp className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">テスト成績管理</div>
+                  <div className="text-xs text-gray-500">定期考査の成績入力・推移分析</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
             </div>
           </div>
         </div>
@@ -399,6 +411,18 @@ export default function DashboardPage() {
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 group-hover:text-gray-800">学習記録</div>
                   <div className="text-xs text-gray-500">学習状況を記録</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+
+              <button
+                onClick={() => router.push('/my-test-scores')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdTrendingUp className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">マイ成績</div>
+                  <div className="text-xs text-gray-500">テスト結果の入力・確認</div>
                 </div>
                 <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
               </button>

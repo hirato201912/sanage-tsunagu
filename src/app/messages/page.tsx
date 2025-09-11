@@ -482,8 +482,8 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-lg">
+    <div className="min-h-screen bg-amber-50">
+      <header className="bg-amber-100 border-b-2 border-amber-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
@@ -493,14 +493,14 @@ export default function MessagesPage() {
                 className="h-12 w-12"
               />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">メッセージ</h1>
-                <p className="text-sm text-gray-600 mt-1">リアルタイムコミュニケーション</p>
+                <h1 className="text-3xl font-bold text-amber-900">学習サポートルーム</h1>
+                <p className="text-sm text-amber-700 mt-1">生徒・講師・塾長の学習相談スペース</p>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md transition-colors"
+                className="flex items-center space-x-2 text-amber-700 hover:text-amber-900 px-3 py-2 rounded-md transition-colors border border-amber-300 hover:bg-amber-200"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -517,10 +517,10 @@ export default function MessagesPage() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
             
             {/* ユーザー選択サイドバー */}
-            <div className="lg:col-span-1 bg-white rounded-lg shadow">
-              <div className="p-4 border-b">
-                <h2 className="font-medium text-gray-900">連絡先</h2>
-                <p className="text-sm text-gray-500">メッセージする相手を選択</p>
+            <div className="lg:col-span-1 bg-white rounded-lg shadow-lg border border-amber-200">
+              <div className="p-4 border-b border-amber-200 bg-amber-50">
+                <h2 className="font-medium text-amber-900">学習相談相手</h2>
+                <p className="text-sm text-amber-700">相談したい相手を選択</p>
               </div>
               <div className="overflow-y-auto max-h-96">
                 {availableUsers.length === 0 ? (
@@ -532,8 +532,8 @@ export default function MessagesPage() {
                     <button
                       key={user.id}
                       onClick={() => handleUserSelect(user)}
-                      className={`w-full text-left p-3 hover:bg-gray-50 border-b border-gray-100 transition-colors ${
-                        selectedUser?.id === user.id ? 'bg-blue-50 border-blue-200' : ''
+                      className={`w-full text-left p-3 hover:bg-amber-50 border-b border-amber-100 transition-colors ${
+                        selectedUser?.id === user.id ? 'bg-amber-100 border-amber-300' : ''
                       }`}
                     >
                       <div className="flex justify-between items-center">
@@ -554,25 +554,27 @@ export default function MessagesPage() {
             </div>
 
             {/* メッセージエリア */}
-            <div className="lg:col-span-3 bg-white rounded-lg shadow flex flex-col">
+            <div className="lg:col-span-3 bg-white rounded-lg shadow-lg border border-amber-200 flex flex-col">
               
               {/* ヘッダー */}
-              <div className="p-4 border-b bg-gray-50">
+              <div className="p-4 border-b border-amber-200 bg-amber-50">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">
-                    {selectedUser ? (
-                      <>
-                        {selectedUser.full_name}さんとの会話
-                        <div className="text-sm text-gray-500 mt-1">
-                          {getRoleText(selectedUser.role)}
-                        </div>
-                      </>
-                    ) : (
-                      'メッセージ'
-                    )}
-                  </h3>
-                  <div className="text-sm text-gray-500">
-                    {profile.full_name}さん（{getRoleText(profile.role)}）
+                  <div>
+                    <h3 className="font-medium text-amber-900">
+                      {selectedUser ? (
+                        <>
+                          {selectedUser.full_name}さんの学習サポートルーム
+                          <div className="text-sm text-amber-700 mt-1">
+                            {getRoleText(selectedUser.role)}との学習相談
+                          </div>
+                        </>
+                      ) : (
+                        '学習サポートルーム'
+                      )}
+                    </h3>
+                  </div>
+                  <div className="text-sm text-amber-700 bg-white px-3 py-1 rounded-full border border-amber-200">
+                    {profile.full_name}（{getRoleText(profile.role)}）
                   </div>
                 </div>
               </div>
@@ -583,16 +585,20 @@ export default function MessagesPage() {
                 className="flex-1 overflow-y-auto p-4 space-y-4"
               >
                 {!selectedUser ? (
-                  <div className="text-center text-gray-500 mt-8">
-                    <div className="mb-4">💬</div>
-                    <div>連絡先から相手を選択してください</div>
-                    <div className="text-sm">メッセージのやり取りを開始できます</div>
+                  <div className="text-center text-amber-700 mt-8 p-8 bg-amber-50 rounded-lg mx-4 border border-amber-200">
+                    <svg className="mx-auto h-16 w-16 text-amber-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <div className="text-lg font-medium mb-2">学習相談を始めましょう</div>
+                    <div className="text-sm">左から相談したい相手を選択してください</div>
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="text-center text-gray-500 mt-8">
-                    <div className="mb-4">✨</div>
-                    <div>まだメッセージがありません</div>
-                    <div className="text-sm">最初のメッセージを送ってみましょう！</div>
+                  <div className="text-center text-amber-700 mt-8 p-8 bg-amber-50 rounded-lg mx-4 border border-amber-200">
+                    <svg className="mx-auto h-16 w-16 text-amber-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <div className="text-lg font-medium mb-2">学習ノートの1ページ目</div>
+                    <div className="text-sm">今日の学習で困ったことを相談してみましょう！</div>
                   </div>
                 ) : (
                   messages.map((message) => (
@@ -635,12 +641,12 @@ export default function MessagesPage() {
                       
                       {/* メッセージ内容 */}
                       <div className="ml-4">
-                        <div className={`rounded-lg px-4 py-3 max-w-2xl ${
+                        <div className={`rounded-lg px-4 py-3 max-w-2xl border-2 ${
                           message.sender_id === profile.id 
-                            ? 'bg-blue-100 ml-auto' 
-                            : 'bg-gray-100'
+                            ? 'bg-amber-100 ml-auto border-amber-300' 
+                            : 'bg-white border-amber-200'
                         }`}>
-                          <div className="text-gray-900 whitespace-pre-wrap">
+                          <div className="text-amber-900 whitespace-pre-wrap">
                             {message.content}
                           </div>
                           {/* 画像表示 */}
@@ -652,22 +658,25 @@ export default function MessagesPage() {
                                 className="max-w-full h-auto rounded cursor-pointer hover:opacity-90 transition-opacity border"
                                 onClick={() => window.open(message.image_url!, '_blank')}
                               />
-                              <div className="mt-1 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                              <div className="mt-1 p-2 bg-amber-50 rounded text-xs text-amber-700 border border-amber-200">
                                 <div className="flex items-center space-x-2">
-                                  <span>📷 {getImageDisplayName(message)}</span>
+                                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  <span>{getImageDisplayName(message)}</span>
                                 </div>
                                 {(() => {
                                   const sizeInfo = getImageSizeInfo(message)
                                   if (sizeInfo) {
                                     const compressionRatio = Math.round((1 - sizeInfo.compressed / sizeInfo.original) * 100)
                                     return (
-                                      <div className="mt-1 text-xs text-gray-500">
+                                      <div className="mt-1 text-xs text-amber-600">
                                         {formatFileSizeKB(sizeInfo.original)} → {formatFileSizeKB(sizeInfo.compressed)} 
-                                        <span className="text-green-600 font-medium"> (-{compressionRatio}%)</span>
+                                        <span className="text-green-700 font-medium"> (-{compressionRatio}%)</span>
                                       </div>
                                     )
                                   }
-                                  return <div className="mt-1 text-xs text-gray-500">圧縮済み</div>
+                                  return <div className="mt-1 text-xs text-amber-600">圧縮済み</div>
                                 })()}
                               </div>
                             </div>
@@ -681,14 +690,14 @@ export default function MessagesPage() {
 
               {/* メッセージ入力 */}
               {selectedUser && (
-                <div className="p-4 border-t bg-gray-50 space-y-3">
+                <div className="p-4 border-t border-amber-200 bg-amber-50 space-y-3">
                   {/* 画像プレビュー */}
                   {imagePreview && (
                     <div className="relative inline-block">
                       <img
                         src={imagePreview}
                         alt="アップロード予定の画像"
-                        className="max-w-xs max-h-32 rounded border"
+                        className="max-w-xs max-h-32 rounded border border-amber-300"
                       />
                       <button
                         type="button"
@@ -697,9 +706,14 @@ export default function MessagesPage() {
                       >
                         <MdClose className="h-3 w-3" />
                       </button>
-                      <div className="mt-1 p-2 bg-gray-50 rounded text-xs">
-                        <div className="text-gray-600">📷 {selectedImage?.name}</div>
-                        <div className="text-gray-500 mt-1">
+                      <div className="mt-1 p-2 bg-white rounded text-xs border border-amber-200">
+                        <div className="text-amber-700 flex items-center space-x-1">
+                          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span>{selectedImage?.name}</span>
+                        </div>
+                        <div className="text-amber-600 mt-1">
                           {formatFileSizeKB(selectedImage?.size || 0)} → 圧縮後送信
                         </div>
                       </div>
@@ -717,9 +731,9 @@ export default function MessagesPage() {
                             sendMessage()
                           }
                         }}
-                        placeholder="メッセージを入力... (Enterで送信、Shift+Enterで改行)"
+                        placeholder="今日の学習で困ったことや質問を書いてください... (Enterで送信)"
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        className="w-full px-3 py-2 border border-amber-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none bg-white text-amber-900 placeholder-amber-600"
                       />
                     </div>
                     <div className="flex flex-col space-y-2">
@@ -733,7 +747,7 @@ export default function MessagesPage() {
                       />
                       <label
                         htmlFor="image-input"
-                        className="flex items-center justify-center w-12 h-12 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-md cursor-pointer transition-colors"
+                        className="flex items-center justify-center w-12 h-12 bg-white border border-amber-300 hover:bg-amber-100 text-amber-700 rounded-md cursor-pointer transition-colors"
                         title="画像を添付"
                       >
                         <MdImage className="h-5 w-5" />
@@ -743,7 +757,7 @@ export default function MessagesPage() {
                       <button
                         onClick={sendMessage}
                         disabled={(!newMessage.trim() && !selectedImage) || sending || uploadingImage}
-                        className="flex items-center justify-center w-12 h-12 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                        className="flex items-center justify-center w-12 h-12 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50 transition-colors border border-amber-700"
                         title="送信"
                       >
                         {(sending || uploadingImage) ? (
@@ -759,8 +773,8 @@ export default function MessagesPage() {
                   </div>
                   
                   {(sending || uploadingImage) && (
-                    <div className="text-sm text-blue-600">
-                      {uploadingImage ? '画像をアップロード中...' : 'メッセージを送信中...'}
+                    <div className="text-sm text-amber-700">
+                      {uploadingImage ? '画像をアップロード中...' : '学習メモを送信中...'}
                     </div>
                   )}
                 </div>
