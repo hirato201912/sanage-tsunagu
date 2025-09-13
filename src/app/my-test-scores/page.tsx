@@ -460,14 +460,14 @@ export default function MyTestScoresPage() {
 
                     <div className="space-y-4 max-h-96 overflow-y-auto">
                       {formData.subjects.map((subject, index) => (
-                        <div key={index} className="p-4 bg-white rounded-lg border-2 border-gray-200 shadow-sm">
+                        <div key={index} className="p-4 bg-gray-50 rounded-xl border-2 border-[#8DCCB3]/20 shadow-md">
                           <div className="grid grid-cols-1 gap-4">
                             <div>
-                              <label className="block text-sm font-semibold text-gray-800 mb-2">科目</label>
+                              <label className="block text-sm font-bold text-[#8DCCB3] mb-2">科目</label>
                               <select
                                 value={subject.subject}
                                 onChange={(e) => updateSubject(index, 'subject', e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] bg-white"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] bg-white shadow-sm"
                               >
                                 <option value="">科目を選択</option>
                                 {PRESET_SUBJECTS.map(subj => (
@@ -477,19 +477,19 @@ export default function MyTestScoresPage() {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                               <div>
-                                <label className="block text-sm font-semibold text-gray-800 mb-2">得点 *</label>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">得点 *</label>
                                 <input
                                   type="number"
                                   value={subject.score}
                                   onChange={(e) => updateSubject(index, 'score', e.target.value)}
                                   min="0"
                                   max="100"
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg font-bold focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] text-center"
+                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-lg font-bold focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] text-center shadow-sm"
                                   placeholder="85"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-semibold text-gray-800 mb-2">クラス平均</label>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">クラス平均</label>
                                 <input
                                   type="number"
                                   value={subject.class_average}
@@ -497,18 +497,18 @@ export default function MyTestScoresPage() {
                                   min="0"
                                   max="100"
                                   step="0.1"
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] text-center"
+                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] text-center shadow-sm"
                                   placeholder="70.5"
                                 />
                               </div>
                               <div>
-                                <label className="block text-sm font-semibold text-gray-800 mb-2">順位</label>
+                                <label className="block text-sm font-bold text-gray-700 mb-2">順位</label>
                                 <input
                                   type="number"
                                   value={subject.rank}
                                   onChange={(e) => updateSubject(index, 'rank', e.target.value)}
                                   min="1"
-                                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] text-center"
+                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] text-center shadow-sm"
                                   placeholder="5"
                                 />
                               </div>
@@ -586,19 +586,19 @@ export default function MyTestScoresPage() {
                           <div>
                             <h3 className="text-lg font-bold">{exam.test_period}</h3>
                             <p className="text-sm opacity-90">
-                              {exam.test_date ? new Date(exam.test_date).toLocaleDateString('ja-JP') : '日付未設定'} ・ {exam.totalSubjects}科目
+                              {exam.test_date ? new Date(exam.test_date).toLocaleDateString('ja-JP') : '日付未設定'}
                             </p>
                           </div>
                           <div className="flex space-x-2">
                             <button
                               onClick={() => initializeForm(exam)}
-                              className="bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                              className="bg-white text-[#8DCCB3] px-4 py-2 rounded-lg text-sm font-semibold border border-gray-200 shadow-sm"
                             >
                               編集
                             </button>
                             <button
                               onClick={() => deleteExam(exam)}
-                              className="bg-red-500/30 hover:bg-red-500/50 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                              className="bg-gray-100 text-red-600 px-4 py-2 rounded-lg text-sm font-medium"
                             >
                               削除
                             </button>
@@ -618,64 +618,63 @@ export default function MyTestScoresPage() {
                             return (
                               <div
                                 key={subjectIndex}
-                                className="bg-white rounded-lg border border-gray-200 p-2 hover:border-[#8DCCB3] hover:shadow-md transition-all duration-200"
+                                className="bg-white rounded-lg border-2 border-gray-300 p-3 shadow-sm"
                               >
                                 {/* 科目名 */}
                                 <h4 className="font-bold text-xs text-gray-800 mb-1 text-center truncate">{subject.subject}</h4>
                                 
                                 {/* メイン情報エリア */}
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                   {/* 点数エリア */}
-                                  <div className="text-center">
-                                    <div className="flex items-center justify-center space-x-2 mb-1">
-                                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${
-                                        getScoreColor(subject.score)
-                                      }`}>
-                                        {subject.score}
-                                      </div>
+                                  <div>
+                                    <div className="flex items-baseline justify-center space-x-2 mb-2">
+                                      <span className="text-2xl font-bold text-gray-800">{subject.score}</span>
+                                      <span className="text-sm text-gray-500">点</span>
                                       {scoreDifference !== null && (
-                                        <div className={`px-2 py-1 rounded-full text-sm font-bold ${
+                                        <span className={`text-sm font-bold ${
                                           scoreDifference > 0 ? 'text-green-600' : 
                                           scoreDifference < 0 ? 'text-red-600' : 'text-gray-500'
                                         }`}>
-                                          {scoreDifference > 0 ? '+' : ''}{scoreDifference}
-                                          {scoreDifference > 0 ? '↑' : scoreDifference < 0 ? '↓' : '→'}
-                                        </div>
+                                          ({scoreDifference > 0 ? '+' : ''}{scoreDifference}
+                                          {scoreDifference > 0 ? '↑' : scoreDifference < 0 ? '↓' : '→'})
+                                        </span>
                                       )}
                                     </div>
-                                    <div className="text-xs text-gray-500 mb-2">点</div>
-                                    <div className="text-xs text-gray-400 font-medium bg-gray-50 rounded px-2 py-1 inline-block">
+                                    <div className="text-xs text-gray-400 text-center bg-gray-50 rounded px-2 py-1">
                                       {subject.class_average ? `平均 ${subject.class_average}点` : '平均 未入力'}
                                     </div>
                                   </div>
                                   
                                   {/* 順位エリア */}
-                                  <div className="text-center">
-                                    <div className="flex items-center justify-center space-x-2 mb-1">
+                                  <div>
+                                    <div className="flex items-baseline justify-center space-x-2">
                                       {subject.student_rank ? (
                                         <>
-                                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
-                                            subject.student_rank <= 3 ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300' :
-                                            subject.student_rank <= 10 ? 'bg-gray-100 text-gray-700 border border-gray-300' :
-                                            'bg-gray-50 text-gray-600 border border-gray-200'
+                                          <span className={`text-xl font-bold ${
+                                            subject.student_rank <= 3 ? 'text-yellow-600' :
+                                            subject.student_rank <= 10 ? 'text-gray-700' :
+                                            'text-gray-600'
                                           }`}>
                                             {subject.student_rank}
-                                          </div>
+                                          </span>
+                                          <span className="text-sm text-gray-500">位</span>
                                           {rankDifference !== null && (
-                                            <div className={`px-2 py-1 rounded-full text-sm font-bold ${
+                                            <span className={`text-sm font-bold ${
                                               rankDifference > 0 ? 'text-green-600' : 
                                               rankDifference < 0 ? 'text-red-600' : 'text-gray-500'
                                             }`}>
-                                              {rankDifference > 0 ? '+' : ''}{rankDifference}
-                                              {rankDifference > 0 ? '↑' : rankDifference < 0 ? '↓' : '→'}
-                                            </div>
+                                              ({rankDifference > 0 ? '+' : ''}{rankDifference}
+                                              {rankDifference > 0 ? '↑' : rankDifference < 0 ? '↓' : '→'})
+                                            </span>
                                           )}
                                         </>
                                       ) : (
-                                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-gray-400 bg-gray-50 border border-gray-200 text-sm">-</div>
+                                        <>
+                                          <span className="text-xl font-bold text-gray-400">-</span>
+                                          <span className="text-sm text-gray-500">位</span>
+                                        </>
                                       )}
                                     </div>
-                                    <div className="text-xs text-gray-500">順位</div>
                                   </div>
                                 </div>
                               </div>
