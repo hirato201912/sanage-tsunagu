@@ -482,8 +482,8 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50/80 to-pink-100/60">
-      <header className="bg-gradient-to-r from-pink-100 to-rose-100/80 border-b-2 border-pink-200/60 backdrop-blur-sm">
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm border-b-2 border-[#8DCCB3]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
@@ -493,8 +493,8 @@ export default function MessagesPage() {
                 className="h-12 w-12"
               />
               <div>
-                <h1 className="text-3xl font-bold text-pink-700 tracking-wide">学習サポートルーム</h1>
-                <p className="text-sm text-pink-600/80 mt-1 font-medium">生徒・講師・塾長の学習相談スペース</p>
+                <h1 className="text-3xl font-bold text-[#8DCCB3] tracking-wide">学習サポートルーム</h1>
+                <p className="text-sm text-gray-600 mt-1 font-medium">生徒・講師・塾長の学習相談スペース</p>
               </div>
             </div>
           </div>
@@ -506,10 +506,10 @@ export default function MessagesPage() {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">
             
             {/* ユーザー選択サイドバー */}
-            <div className="lg:col-span-1 bg-white/90 rounded-xl shadow-lg border border-pink-200/60 backdrop-blur-sm">
-              <div className="p-4 border-b border-pink-200/60 bg-gradient-to-r from-pink-50 to-rose-50/80">
-                <h2 className="font-bold text-pink-700 tracking-wide">学習相談相手</h2>
-                <p className="text-sm text-pink-600/80 font-medium">相談したい相手を選択</p>
+            <div className="lg:col-span-1 bg-white rounded-xl shadow-lg border border-gray-200">
+              <div className="p-4 border-b border-gray-200 bg-[#8DCCB3]/10">
+                <h2 className="font-bold text-[#8DCCB3] tracking-wide">学習相談相手</h2>
+                <p className="text-sm text-gray-600 font-medium">相談したい相手を選択</p>
               </div>
               <div className="overflow-y-auto max-h-96">
                 {availableUsers.length === 0 ? (
@@ -521,8 +521,8 @@ export default function MessagesPage() {
                     <button
                       key={user.id}
                       onClick={() => handleUserSelect(user)}
-                      className={`w-full text-left p-3 border-b border-pink-100/60 transition-colors ${
-                        selectedUser?.id === user.id ? 'bg-gradient-to-r from-pink-100 to-rose-100/80 border-pink-200' : 'hover:bg-pink-50/60'
+                      className={`w-full text-left p-3 border-b border-gray-100 transition-colors ${
+                        selectedUser?.id === user.id ? 'bg-[#8DCCB3]/10 border-[#8DCCB3]/30' : 'hover:bg-gray-50'
                       }`}
                     >
                       <div className="flex justify-between items-center">
@@ -543,33 +543,33 @@ export default function MessagesPage() {
             </div>
 
             {/* メッセージエリア */}
-            <div className="lg:col-span-3 bg-white rounded-lg shadow-lg border border-amber-200 flex flex-col">
+            <div className="lg:col-span-3 bg-white rounded-xl shadow-lg border border-gray-200 flex flex-col">
               
               {/* ヘッダー */}
-              <div className="p-4 border-b border-pink-200/60 bg-gradient-to-r from-pink-50 to-rose-50/80">
+              <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-pink-50/80 to-rose-50/60">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-3 lg:space-y-0">
                   <div className="flex-1">
-                    <h3 className="font-bold text-pink-700 tracking-wide text-lg">
+                    <h3 className="font-bold text-gray-800 tracking-wide text-lg">
                       {selectedUser ? (
                         <>
                           <div className="mb-1">{selectedUser.full_name}さんの</div>
-                          <div className="text-pink-600">学習サポートルーム</div>
+                          <div className="text-pink-600 font-bold">学習サポートルーム</div>
                           <div className="text-sm text-pink-600/80 mt-1.5 font-medium">
                             {getRoleText(selectedUser.role)}との学習相談
                           </div>
                         </>
                       ) : (
-                        '学習サポートルーム'
+                        <span className="text-pink-600 font-bold">学習サポートルーム</span>
                       )}
                     </h3>
                   </div>
                   <div className="flex flex-col items-end space-y-2">
-                    <div className="text-sm text-pink-600 bg-white/90 px-3 py-1.5 rounded-full border border-pink-200/60 shadow-sm backdrop-blur-sm font-medium">
+                    <div className="text-sm text-gray-700 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm font-medium">
                       {profile.full_name}（{getRoleText(profile.role)}）
                     </div>
                     <button
                       onClick={() => router.push('/dashboard')}
-                      className="flex items-center space-x-1.5 text-pink-500 text-xs px-2 py-1 rounded-md transition-colors hover:text-pink-600 hover:bg-pink-100/50"
+                      className="flex items-center space-x-1.5 text-gray-500 text-xs px-2 py-1 rounded-md transition-colors hover:text-[#8DCCB3] hover:bg-[#8DCCB3]/10"
                     >
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
