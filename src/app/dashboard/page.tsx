@@ -254,6 +254,27 @@ export default function DashboardPage() {
               </button>
             </div>
           </div>
+
+          {/* 授業記録管理カテゴリ */}
+          <div className="border-l-4 border-[#8DCCB3] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdEventNote className="mr-2 text-[#8DCCB3]" size={16} />
+              授業記録管理
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/lesson-notes')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdEventNote className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">授業記録ノート</div>
+                  <div className="text-xs text-gray-500">授業記録・引き継ぎ事項管理</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -357,6 +378,27 @@ export default function DashboardPage() {
                   )}
                   <div className="text-pink-400 font-bold text-lg">›</div>
                 </div>
+              </button>
+            </div>
+          </div>
+
+          {/* 授業記録カテゴリ */}
+          <div className="border-l-4 border-[#8DCCB3] pl-4">
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+              <MdEventNote className="mr-2 text-[#8DCCB3]" size={16} />
+              授業記録
+            </h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => router.push('/lesson-notes')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdEventNote className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">授業記録ノート</div>
+                  <div className="text-xs text-gray-500">授業内容記録・引き継ぎ事項</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
               </button>
             </div>
           </div>
