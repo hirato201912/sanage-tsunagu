@@ -181,19 +181,31 @@ export default function DashboardPage() {
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/messages')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md relative"
+                className="w-full flex items-center p-4 text-left bg-gradient-to-br from-pink-50 via-rose-50/80 to-pink-100/60 border-2 border-pink-200/60 rounded-xl transition-all duration-300 shadow-lg group relative overflow-hidden backdrop-blur-sm"
               >
-                <MdMessage className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">メッセージ</div>
-                  <div className="text-xs text-gray-500">直接メッセージの送受信</div>
-                </div>
-                {unreadCount > 0 && (
-                  <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold mr-2">
-                    {unreadCount}
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-100/40 to-rose-100/30 opacity-60"></div>
+                <div className="relative z-10 flex items-center w-full">
+                  <div className="mr-3 p-2.5 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-xl shadow-lg">
+                    <MdMessage size={20} />
                   </div>
-                )}
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+                  <div className="flex-1">
+                    <div className="font-bold text-pink-600 text-base mb-1 tracking-wide">学習サポートルーム</div>
+                    <div className="text-sm text-gray-600 font-medium">生徒・講師との学習相談</div>
+                    <div className="text-xs text-pink-500/80 mt-1.5 flex items-center">
+                      <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                      </svg>
+                      いつでも気軽に相談
+                    </div>
+                  </div>
+                  {unreadCount > 0 && (
+                    <div className="bg-gradient-to-r from-red-400 to-pink-500 text-white text-xs rounded-full px-3 py-1.5 font-bold mr-3 shadow-lg animate-pulse">
+                      {unreadCount}
+                    </div>
+                  )}
+                  <div className="text-pink-400 font-bold text-lg">›</div>
+                </div>
               </button>
               
               <button
@@ -320,19 +332,31 @@ export default function DashboardPage() {
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/messages')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+                className="w-full flex items-center p-4 text-left bg-gradient-to-br from-pink-50 via-rose-50/80 to-pink-100/60 border-2 border-pink-200/60 rounded-xl transition-all duration-300 shadow-lg group relative overflow-hidden backdrop-blur-sm"
               >
-                <MdMessage className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">メッセージ</div>
-                  <div className="text-xs text-gray-500">担当生徒とのやりとり</div>
-                </div>
-                {unreadCount > 0 && (
-                  <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold mr-2">
-                    {unreadCount}
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-100/40 to-rose-100/30 opacity-60"></div>
+                <div className="relative z-10 flex items-center w-full">
+                  <div className="mr-3 p-2.5 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-xl shadow-lg">
+                    <MdMessage size={20} />
                   </div>
-                )}
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+                  <div className="flex-1">
+                    <div className="font-bold text-pink-600 text-base mb-1 tracking-wide">学習サポートルーム</div>
+                    <div className="text-sm text-gray-600 font-medium">担当生徒との学習相談</div>
+                    <div className="text-xs text-pink-500/80 mt-1.5 flex items-center">
+                      <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                      </svg>
+                      いつでも気軽に相談
+                    </div>
+                  </div>
+                  {unreadCount > 0 && (
+                    <div className="bg-gradient-to-r from-red-400 to-pink-500 text-white text-xs rounded-full px-3 py-1.5 font-bold mr-3 shadow-lg animate-pulse">
+                      {unreadCount}
+                    </div>
+                  )}
+                  <div className="text-pink-400 font-bold text-lg">›</div>
+                </div>
               </button>
             </div>
           </div>
@@ -462,19 +486,31 @@ export default function DashboardPage() {
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/messages')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+                className="w-full flex items-center p-4 text-left bg-gradient-to-br from-pink-50 via-rose-50/80 to-pink-100/60 border-2 border-pink-200/60 rounded-xl transition-all duration-300 shadow-lg group relative overflow-hidden backdrop-blur-sm"
               >
-                <MdMessage className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">メッセージ</div>
-                  <div className="text-xs text-gray-500">講師とのやりとり</div>
-                </div>
-                {unreadCount > 0 && (
-                  <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold mr-2">
-                    {unreadCount}
+                <div className="absolute inset-0 bg-gradient-to-r from-pink-100/40 to-rose-100/30 opacity-60"></div>
+                <div className="relative z-10 flex items-center w-full">
+                  <div className="mr-3 p-2.5 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-xl shadow-lg">
+                    <MdMessage size={20} />
                   </div>
-                )}
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+                  <div className="flex-1">
+                    <div className="font-bold text-pink-600 text-base mb-1 tracking-wide">学習サポートルーム</div>
+                    <div className="text-sm text-gray-600 font-medium">謟師との学習相談</div>
+                    <div className="text-xs text-pink-500/80 mt-1.5 flex items-center">
+                      <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                      </svg>
+                      いつでも気軽に相談
+                    </div>
+                  </div>
+                  {unreadCount > 0 && (
+                    <div className="bg-gradient-to-r from-red-400 to-pink-500 text-white text-xs rounded-full px-3 py-1.5 font-bold mr-3 shadow-lg animate-pulse">
+                      {unreadCount}
+                    </div>
+                  )}
+                  <div className="text-pink-400 font-bold text-lg">›</div>
+                </div>
               </button>
             </div>
           </div>
