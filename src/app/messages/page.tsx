@@ -497,6 +497,17 @@ export default function MessagesPage() {
                 <p className="text-sm text-gray-600 mt-1 font-medium">生徒・講師・塾長の学習相談スペース</p>
               </div>
             </div>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center space-x-2 bg-white/90 hover:bg-[#8DCCB3]/10 border border-[#8DCCB3]/30 text-[#8DCCB3] px-4 py-2 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span className="font-medium">ダッシュボード</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -567,15 +578,6 @@ export default function MessagesPage() {
                     <div className="text-sm text-gray-700 bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm font-medium">
                       {profile.full_name}（{getRoleText(profile.role)}）
                     </div>
-                    <button
-                      onClick={() => router.push('/dashboard')}
-                      className="flex items-center space-x-1.5 text-gray-500 text-xs px-2 py-1 rounded-md transition-colors hover:text-[#8DCCB3] hover:bg-[#8DCCB3]/10"
-                    >
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                      </svg>
-                      <span>ダッシュボード</span>
-                    </button>
                   </div>
                 </div>
               </div>

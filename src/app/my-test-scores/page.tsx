@@ -611,7 +611,7 @@ export default function MyTestScoresPage() {
                         <div className="grid grid-cols-2 gap-2">
                           {exam.subjects.map((subject, subjectIndex) => {
                             const previousSubject = previousExam?.subjects.find(s => s.subject === subject.subject)
-                            const scoreDifference = previousSubject ? subject.score - previousSubject.score : null
+                            const scoreDifference = previousSubject ? Math.round((subject.score - previousSubject.score) * 10) / 10 : null
                             const rankDifference = (previousSubject && subject.student_rank && previousSubject.student_rank) 
                               ? previousSubject.student_rank - subject.student_rank : null
                             

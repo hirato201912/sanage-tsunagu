@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import type { Schedule, Profile } from '@/lib/supabase'
 import { 
   MdDashboard, 
   MdCalendarToday, 
@@ -20,10 +21,17 @@ import {
   MdPlayCircleOutline
 } from 'react-icons/md'
 
+interface ScheduleWithProfile extends Schedule {
+  student?: Profile
+  instructor?: Profile
+}
+
 export default function DashboardPage() {
   const { user, profile, loading, signOut } = useAuth()
   const router = useRouter()
   const [unreadCount, setUnreadCount] = useState(0)
+  const [todaySchedules, setTodaySchedules] = useState<ScheduleWithProfile[]>([])
+  const [isLoadingSchedules, setIsLoadingSchedules] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) {
@@ -34,6 +42,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (profile) {
       fetchUnreadCount()
+      fetchTodaySchedules()
       // リアルタイム更新
       const channel = supabase
         .channel('unread_messages')
@@ -66,6 +75,43 @@ export default function DashboardPage() {
       setUnreadCount(count || 0)
     } catch (error) {
       console.error('Error fetching unread count:', error)
+    }
+  }
+
+  const fetchTodaySchedules = async () => {
+    if (!profile) return
+
+    setIsLoadingSchedules(true)
+    try {
+      const today = new Date().toISOString().split('T')[0]
+
+      let query = supabase
+        .from('schedules')
+        .select(`
+          *,
+          student:profiles!schedules_student_id_fkey(id, full_name),
+          instructor:profiles!schedules_instructor_id_fkey(id, full_name)
+        `)
+        .eq('lesson_date', today)
+        .eq('status', 'scheduled')
+        .order('start_time')
+
+      // 管理者は全てのスケジュール、講師・生徒は自分関連のみ
+      if (profile.role === 'instructor') {
+        query = query.eq('instructor_id', profile.id)
+      } else if (profile.role === 'student') {
+        query = query.eq('student_id', profile.id)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      setTodaySchedules(data || [])
+    } catch (error) {
+      console.error('Error fetching today schedules:', error)
+      setTodaySchedules([])
+    } finally {
+      setIsLoadingSchedules(false)
     }
   }
 
@@ -222,13 +268,25 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 分析カテゴリ */}
+          {/* テスト管理カテゴリ */}
           <div className="border-l-4 border-[#5FA084] pl-4">
             <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdAnalytics className="mr-2 text-[#8DCCB3]" size={16} />
-              分析
+              <MdTrendingUp className="mr-2 text-[#8DCCB3]" size={16} />
+              テスト管理
             </h3>
             <div className="space-y-2">
+              <button
+                onClick={() => router.push('/test-scores')}
+                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+              >
+                <MdTrendingUp className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900 group-hover:text-gray-800">テスト成績管理</div>
+                  <div className="text-xs text-gray-500">生徒のテスト結果閲覧・分析</div>
+                </div>
+                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
+              </button>
+
               <button
                 onClick={() => router.push('/learning-admin')}
                 className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
@@ -237,18 +295,6 @@ export default function DashboardPage() {
                 <div className="flex-1">
                   <div className="font-medium text-gray-900 group-hover:text-gray-800">学習記録分析</div>
                   <div className="text-xs text-gray-500">全生徒の学習状況把握</div>
-                </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
-              </button>
-
-              <button
-                onClick={() => router.push('/test-scores')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
-              >
-                <MdTrendingUp className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">テスト成績管理</div>
-                  <div className="text-xs text-gray-500">定期考査の成績入力・推移分析</div>
                 </div>
                 <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
               </button>
@@ -282,32 +328,100 @@ export default function DashboardPage() {
     {/* メインエリア */}
     <div className="flex-1">
       <div className="bg-white shadow rounded-lg p-6 border-t-4 border-[#8DCCB3]">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
-          <MdEventNote className="mr-2 text-[#8DCCB3]" />
-          本日の授業予定
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
-            <div className="w-2 h-2 bg-[#8DCCB3] rounded-full mr-3"></div>
-            <div>
-              <div className="font-medium text-gray-800">14:00 - 数学</div>
-              <div className="text-sm text-gray-600">田中太郎 - 教室A</div>
-            </div>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gray-800 flex items-center">
+            <MdEventNote className="mr-3 text-[#8DCCB3]" size={24} />
+            本日の授業予定
+          </h3>
+          <div className="text-sm text-gray-500">
+            {new Date().toLocaleDateString('ja-JP', {
+              month: 'long',
+              day: 'numeric',
+              weekday: 'short'
+            })}
           </div>
-          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
-            <div className="w-2 h-2 bg-[#B8E0D0] rounded-full mr-3"></div>
-            <div>
-              <div className="font-medium text-gray-800">16:00 - 英語</div>
-              <div className="text-sm text-gray-600">佐藤花子 - 教室B</div>
-            </div>
-          </div>
-          <button 
-            onClick={() => router.push('/schedule')}
-            className="w-full text-center py-3 text-[#8DCCB3] hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 text-sm font-medium border border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40"
-          >
-            全ての予定を表示 →
-          </button>
         </div>
+
+        {isLoadingSchedules ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8DCCB3]"></div>
+          </div>
+        ) : todaySchedules.length > 0 ? (
+          <div className="space-y-3">
+            {todaySchedules.map((schedule, index) => (
+              <div
+                key={schedule.id}
+                className="group hover:scale-[1.02] transition-all duration-200 p-4 bg-gradient-to-r from-[#8DCCB3]/8 via-[#8DCCB3]/5 to-transparent rounded-xl border border-[#8DCCB3]/15 hover:border-[#8DCCB3]/30 hover:shadow-md"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-3 h-3 rounded-full ${
+                      schedule.lesson_type === 'face_to_face'
+                        ? 'bg-[#8DCCB3]'
+                        : 'bg-[#B8E0D0]'
+                    } shadow-sm`}></div>
+                    <div>
+                      <div className="font-semibold text-gray-800 text-base">
+                        {schedule.start_time} - {schedule.end_time}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        {schedule.subject}
+                        <span className="mx-1">•</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          schedule.lesson_type === 'face_to_face'
+                            ? 'bg-[#8DCCB3]/20 text-[#5FA084]'
+                            : 'bg-[#B8E0D0]/20 text-[#6BB6A8]'
+                        }`}>
+                          {schedule.lesson_type === 'face_to_face' ? '対面' : '映像'}
+                        </span>
+                      </div>
+                      {(schedule.student?.full_name || schedule.instructor?.full_name) && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          {profile?.role === 'admin' ? (
+                            <>
+                              {schedule.student?.full_name && `生徒: ${schedule.student.full_name}`}
+                              {schedule.student?.full_name && schedule.instructor?.full_name && ' • '}
+                              {schedule.instructor?.full_name && `講師: ${schedule.instructor.full_name}`}
+                            </>
+                          ) : profile?.role === 'instructor' ? (
+                            schedule.student?.full_name && `生徒: ${schedule.student.full_name}`
+                          ) : (
+                            schedule.instructor?.full_name && `講師: ${schedule.instructor.full_name}`
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-[#8DCCB3]/40 group-hover:text-[#8DCCB3] transition-colors">
+                    <MdCalendarToday size={16} />
+                  </div>
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={() => router.push('/schedule')}
+              className="w-full text-center py-4 text-[#8DCCB3] hover:text-[#5FA084] hover:bg-[#8DCCB3]/10 rounded-xl transition-all duration-200 text-sm font-semibold border-2 border-dashed border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40 group"
+            >
+              <div className="flex items-center justify-center space-x-2">
+                <MdCalendarToday className="group-hover:scale-110 transition-transform" size={16} />
+                <span>全ての予定を表示</span>
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
+            </button>
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+            <MdEventNote className="mx-auto text-gray-300 mb-4" size={48} />
+            <p className="text-gray-500 font-medium mb-2">本日の授業予定はありません</p>
+            {/* <p className="text-sm text-gray-400">今日はゆっくりお過ごしください</p> */}
+            <button
+              onClick={() => router.push('/schedule')}
+              className="mt-4 text-[#8DCCB3] hover:text-[#5FA084] text-sm font-medium underline hover:no-underline transition-all"
+            >
+              スケジュール管理へ
+            </button>
+          </div>
+        )}
       </div>
     </div>
   </div>
