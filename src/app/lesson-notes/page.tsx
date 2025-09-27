@@ -41,6 +41,10 @@ export default function LessonNotesPage() {
     is_handover: false
   })
   const [isAutoSaving, setIsAutoSaving] = useState(false)
+  const [isClosingForm, setIsClosingForm] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showRestoreModal, setShowRestoreModal] = useState(false)
+  const [restoreData, setRestoreData] = useState<any>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -75,27 +79,17 @@ export default function LessonNotesPage() {
     }
   }, [formData, showForm, editingNote])
 
-  // ページ離脱時の保存
+  // ページ離脱時の保存（一時的に無効化）
   useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (showForm && !editingNote && (formData.lesson_content || formData.student_progress || formData.next_lesson_plan || formData.handover_notes)) {
-        saveFormData()
-        e.preventDefault()
-        e.returnValue = '入力中のデータがあります。ページを離れますか？'
-      }
-    }
-
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden' && showForm && !editingNote) {
         saveFormData()
       }
     }
 
-    window.addEventListener('beforeunload', handleBeforeUnload)
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [showForm, editingNote, formData])
@@ -149,16 +143,12 @@ export default function LessonNotesPage() {
         )
         
         if (hoursDiff < 6 && hasContent) {
-          // ユーザーに復元するか確認
-          const shouldRestore = confirm(
-            `未保存の入力内容が見つかりました。\n前回の入力内容を復元しますか？\n\n（${Math.round(hoursDiff * 60)}分前に自動保存されました）`
-          )
-          
-          if (shouldRestore) {
-            setFormData(formDataOnly)
-          } else {
-            localStorage.removeItem('lesson_notes_draft')
-          }
+          // ユーザーに復元するか確認（モーダルで）
+          setRestoreData({
+            formData: formDataOnly,
+            hoursAgo: Math.round(hoursDiff * 60)
+          })
+          setShowRestoreModal(true)
         } else {
           localStorage.removeItem('lesson_notes_draft')
         }
@@ -171,6 +161,44 @@ export default function LessonNotesPage() {
 
   const clearSavedFormData = () => {
     localStorage.removeItem('lesson_notes_draft')
+  }
+
+  const handleCloseForm = () => {
+    const hasUnsavedData = !editingNote && (
+      formData.lesson_content?.trim() ||
+      formData.student_progress?.trim() ||
+      formData.next_lesson_plan?.trim() ||
+      formData.handover_notes?.trim()
+    )
+
+    if (hasUnsavedData) {
+      setShowConfirmModal(true)
+    } else {
+      closeFormDirectly()
+    }
+  }
+
+  const closeFormDirectly = () => {
+    setIsClosingForm(true)
+    clearSavedFormData()
+    setShowForm(false)
+    setEditingNote(null)
+    setShowConfirmModal(false)
+    setTimeout(() => setIsClosingForm(false), 100)
+  }
+
+  const handleRestoreConfirm = () => {
+    if (restoreData) {
+      setFormData(restoreData.formData)
+    }
+    setShowRestoreModal(false)
+    setRestoreData(null)
+  }
+
+  const handleRestoreCancel = () => {
+    localStorage.removeItem('lesson_notes_draft')
+    setShowRestoreModal(false)
+    setRestoreData(null)
   }
 
   const fetchLessonNotes = async () => {
@@ -299,6 +327,7 @@ export default function LessonNotesPage() {
   }
 
   const handleDelete = async (noteId: string) => {
+    console.log('handleDelete called')
     if (!confirm('この記録を削除しますか？')) return
 
     try {
@@ -426,17 +455,8 @@ export default function LessonNotesPage() {
                 </div>
 
                 <button
-                  onClick={() => {
-                    if (!editingNote && (formData.lesson_content || formData.student_progress || formData.next_lesson_plan || formData.handover_notes)) {
-                      if (confirm('入力中のデータがあります。本当に閉じますか？')) {
-                        setShowForm(false)
-                        setEditingNote(null)
-                      }
-                    } else {
-                      setShowForm(false)
-                      setEditingNote(null)
-                    }
-                  }}
+                  type="button"
+                  onClick={handleCloseForm}
                   className="inline-flex items-center px-3 py-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -631,17 +651,7 @@ export default function LessonNotesPage() {
                     <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                       <button
                         type="button"
-                        onClick={() => {
-                          if (!editingNote && (formData.lesson_content || formData.student_progress || formData.next_lesson_plan || formData.handover_notes)) {
-                            if (confirm('入力中のデータがあります。本当にキャンセルしますか？')) {
-                              setShowForm(false)
-                              setEditingNote(null)
-                            }
-                          } else {
-                            setShowForm(false)
-                            setEditingNote(null)
-                          }
-                        }}
+                        onClick={handleCloseForm}
                         className="inline-flex justify-center items-center px-6 py-3 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
                       >
                         キャンセル
@@ -659,6 +669,82 @@ export default function LessonNotesPage() {
                   </div>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* 確認モーダル */}
+        {showConfirmModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">入力内容を破棄しますか？</h3>
+                    <p className="text-sm text-gray-600 mt-1">未保存の入力内容があります。本当にキャンセルしますか？</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowConfirmModal(false)}
+                    className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    戻る
+                  </button>
+                  <button
+                    onClick={closeFormDirectly}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    破棄する
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 復元確認モーダル */}
+        {showRestoreModal && restoreData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">入力内容を復元しますか？</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      未保存の入力内容が見つかりました。
+                      <br />
+                      （{restoreData.hoursAgo}分前に自動保存されました）
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={handleRestoreCancel}
+                    className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    復元しない
+                  </button>
+                  <button
+                    onClick={handleRestoreConfirm}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
+                    復元する
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -682,71 +768,110 @@ export default function LessonNotesPage() {
               <p className="text-gray-600 mb-4">「新しい記録を作成」ボタンから最初の授業記録を作成してください</p>
             </div>
           ) : (
-                <div className="divide-y divide-gray-200">
+                <div className="space-y-6 p-6">
                   {lessonNotes.map((note) => (
-                    <div key={note.id} className="px-4 py-5 sm:p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
-                        <div className="flex-1 mb-3 lg:mb-0">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h4 className="text-base font-medium text-gray-900">
-                              {note.student?.full_name || '不明な生徒'} - {note.subject}
-                            </h4>
-                            {note.is_handover && (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                重要
-                              </span>
-                            )}
+                    <div key={note.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-6">
+                      {/* カードヘッダー */}
+                      <div className="bg-gray-50 -m-6 mb-6 p-6 rounded-t-xl border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-10 h-10 bg-[#8DCCB3] rounded-lg flex items-center justify-center">
+                              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <div className="flex items-center space-x-3 mb-1">
+                                <h3 className="text-lg font-bold text-gray-900">
+                                  {note.student?.full_name || '不明な生徒'}
+                                </h3>
+                                <span className="bg-[#8DCCB3] text-white px-3 py-1 rounded-full text-sm font-medium">
+                                  {note.subject}
+                                </span>
+                                {note.is_handover && (
+                                  <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                                    重要
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                                <span>
+                                  {new Date(note.lesson_date).toLocaleDateString('ja-JP', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    weekday: 'short'
+                                  })}
+                                </span>
+                                <span>講師: {note.instructor.full_name}</span>
+                              </div>
+                            </div>
                           </div>
-                          <p className="text-sm text-gray-600">
-                            {new Date(note.lesson_date).toLocaleDateString('ja-JP', { 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric',
-                              weekday: 'short'
-                            })} | 講師: {note.instructor.full_name}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEdit(note)}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-[#8DCCB3] bg-[#8DCCB3]/5 hover:bg-[#8DCCB3]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8DCCB3]"
-                          >
-                            編集
-                          </button>
-                          <button
-                            onClick={() => handleDelete(note.id)}
-                            className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-red-600 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                          >
-                            削除
-                          </button>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleEdit(note)}
+                              className="px-3 py-2 text-[#8DCCB3] bg-white border border-[#8DCCB3] rounded-lg text-sm hover:bg-[#8DCCB3] hover:text-white transition-colors"
+                            >
+                              編集
+                            </button>
+                            <button
+                              onClick={() => handleDelete(note.id)}
+                              className="px-3 py-2 text-red-600 bg-white border border-red-200 rounded-lg text-sm hover:bg-red-50 transition-colors"
+                            >
+                              削除
+                            </button>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="space-y-4 text-sm">
-                        <div>
-                          <h5 className="font-medium text-gray-700 mb-1">授業内容</h5>
-                          <p className="text-gray-600 leading-relaxed">{note.lesson_content}</p>
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <h4 className="font-semibold text-[#8DCCB3] mb-2 flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            授業内容
+                          </h4>
+                          <p className="text-gray-700 leading-relaxed text-sm">{note.lesson_content}</p>
                         </div>
-                        <div>
-                          <h5 className="font-medium text-gray-700 mb-1">生徒の理解度・進捗</h5>
-                          <p className="text-gray-600 leading-relaxed">{note.student_progress}</p>
+
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <h4 className="font-semibold text-[#8DCCB3] mb-2 flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            理解度・進捗
+                          </h4>
+                          <p className="text-gray-700 leading-relaxed text-sm">{note.student_progress}</p>
                         </div>
-                        <div>
-                          <h5 className="font-medium text-gray-700 mb-1">次回授業の予定</h5>
-                          <p className="text-gray-600 leading-relaxed">{note.next_lesson_plan}</p>
+
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <h4 className="font-semibold text-[#8DCCB3] mb-2 flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            次回予定
+                          </h4>
+                          <p className="text-gray-700 leading-relaxed text-sm">{note.next_lesson_plan}</p>
                         </div>
-                        {note.handover_notes && (
-                          <div className="p-3 bg-[#8DCCB3]/10 rounded-md border-l-4 border-[#8DCCB3]">
-                            <h5 className="font-medium text-gray-700 mb-1">引き継ぎメモ</h5>
-                            <p className="text-gray-700 leading-relaxed">{note.handover_notes}</p>
-                          </div>
-                        )}
                       </div>
 
-                      <div className="mt-4 pt-3 border-t border-gray-200 text-xs text-gray-500">
-                        作成: {new Date(note.created_at).toLocaleString('ja-JP')}
+                      {note.handover_notes && (
+                        <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                          <h4 className="font-semibold text-amber-800 mb-2 flex items-center">
+                            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            引き継ぎメモ
+                          </h4>
+                          <p className="text-gray-700 leading-relaxed text-sm">{note.handover_notes}</p>
+                        </div>
+                      )}
+
+                      <div className="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-500 flex justify-between">
+                        <span>作成: {new Date(note.created_at).toLocaleDateString('ja-JP')}</span>
                         {note.updated_at !== note.created_at && (
-                          <span className="ml-3">更新: {new Date(note.updated_at).toLocaleString('ja-JP')}</span>
+                          <span>更新: {new Date(note.updated_at).toLocaleDateString('ja-JP')}</span>
                         )}
                       </div>
                     </div>
