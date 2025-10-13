@@ -134,24 +134,28 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b-2 border-[#8DCCB3]">
+      <header className="bg-[#6BB6A8] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="flex justify-between items-center py-5">
             <div className="flex items-center space-x-3">
-              <img 
-                src="/main_icon.png" 
-                alt="ツナグ" 
-                className="h-12 w-12"
-              />
-              <h1 className="text-3xl font-bold text-[#8DCCB3]">ツナグ</h1>
+              <div className="bg-white rounded-xl p-2 shadow-md">
+                <img
+                  src="/main_icon.png"
+                  alt="ツナグ"
+                  className="h-9 w-9"
+                />
+              </div>
+              <h1 className="text-2xl font-bold text-white">ツナグ</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-600 font-medium">
-                {profile.full_name}さん ({profile.role === 'admin' ? '塾長' : profile.role === 'instructor' ? '講師' : '生徒'})
-              </span>
+              <div className="bg-white/20 rounded-xl px-4 py-2.5 border border-white/30">
+                <span className="text-white font-medium text-sm">
+                  {profile.full_name}さん ({profile.role === 'admin' ? '塾長' : profile.role === 'instructor' ? '講師' : '生徒'})
+                </span>
+              </div>
               <button
                 onClick={handleSignOut}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                className="bg-white hover:bg-gray-100 text-[#5FA084] px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md"
               >
                 ログアウト
               </button>
@@ -166,217 +170,152 @@ export default function DashboardPage() {
   <div className="flex flex-col lg:flex-row gap-6">
     {/* サイドバー */}
     <div className="w-full lg:w-80">
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-white shadow-xl rounded-2xl p-6">
         <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
-          <MdDashboard className="mr-2 text-[#8DCCB3]" />
+          <div className="bg-[#6BB6A8] p-2.5 rounded-xl mr-3 shadow-md">
+            <MdDashboard className="text-white" size={20} />
+          </div>
           塾長メニュー
         </h2>
-        
-        <div className="space-y-3">
-          {/* 管理カテゴリ */}
-          <div className="border-l-4 border-[#8DCCB3] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdManageAccounts className="mr-2 text-[#8DCCB3]" size={16} />
-              管理
-            </h3>
-            <div className="space-y-2">
-              <button
-                onClick={() => router.push('/schedule')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
-              >
-                <MdCalendarToday className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">スケジュール管理</div>
-                  <div className="text-xs text-gray-500">授業予定の確認・調整</div>
-                </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
-              </button>
-              
-              <button
-                onClick={() => router.push('/instructors')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
-              >
-                <MdSupervisorAccount className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">講師管理</div>
-                  <div className="text-xs text-gray-500">講師の登録・情報管理</div>
-                </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
-              </button>
-              
-              <button
-                onClick={() => router.push('/students')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
-              >
-                <MdSchool className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">生徒管理</div>
-                  <div className="text-xs text-gray-500">生徒の登録・情報管理</div>
-                </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
-              </button>
-            </div>
-          </div>
 
-          {/* コミュニケーションカテゴリ */}
-          <div className="border-l-4 border-[#B8E0D0] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdChat className="mr-2 text-[#8DCCB3]" size={16} />
-              コミュニケーション
-            </h3>
-            <div className="space-y-2">
-              <button
-                onClick={() => router.push('/messages')}
-                className="w-full flex items-center p-4 text-left bg-gradient-to-br from-pink-50 via-rose-50/80 to-pink-100/60 border-2 border-pink-200/60 rounded-xl transition-all duration-300 shadow-lg group relative overflow-hidden backdrop-blur-sm"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-100/40 to-rose-100/30 opacity-60"></div>
-                <div className="relative z-10 flex items-center w-full">
-                  <div className="mr-3 p-2.5 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-xl shadow-lg">
-                    <MdMessage size={20} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-pink-600 text-base mb-1 tracking-wide">学習サポートルーム</div>
-                    <div className="text-sm text-gray-600 font-medium">生徒・講師との学習相談</div>
-                    <div className="text-xs text-pink-500/80 mt-1.5 flex items-center">
-                      <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                      </svg>
-                      いつでも気軽に相談
-                    </div>
-                  </div>
-                  {unreadCount > 0 && (
-                    <div className="bg-gradient-to-r from-red-400 to-pink-500 text-white text-xs rounded-full px-3 py-1.5 font-bold mr-3 shadow-lg animate-pulse">
-                      {unreadCount}
-                    </div>
-                  )}
-                  <div className="text-pink-400 font-bold text-lg">›</div>
-                </div>
-              </button>
-              
-              <button
-                onClick={() => router.push('/message-admin')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
-              >
-                <MdNotifications className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">全体メッセージ管理</div>
-                  <div className="text-xs text-gray-500">全ての会話を確認・管理</div>
-                </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
-              </button>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => router.push('/schedule')}
+            className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col items-center justify-center gap-2 text-white"
+          >
+            <div className="bg-white/20 p-3 rounded-xl">
+              <MdCalendarToday size={24} />
             </div>
-          </div>
+            <span className="font-semibold text-sm">スケジュール</span>
+          </button>
 
-          {/* テスト管理カテゴリ */}
-          <div className="border-l-4 border-[#5FA084] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdTrendingUp className="mr-2 text-[#8DCCB3]" size={16} />
-              テスト管理
-            </h3>
-            <div className="space-y-2">
-              <button
-                onClick={() => router.push('/test-scores')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
-              >
-                <MdTrendingUp className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">テスト成績管理</div>
-                  <div className="text-xs text-gray-500">生徒のテスト結果閲覧・分析</div>
-                </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
-              </button>
-
-              <button
-                onClick={() => router.push('/learning-admin')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
-              >
-                <MdAnalytics className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">学習記録分析</div>
-                  <div className="text-xs text-gray-500">全生徒の学習状況把握</div>
-                </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
-              </button>
+          <button
+            onClick={() => router.push('/instructors')}
+            className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col items-center justify-center gap-2 text-white"
+          >
+            <div className="bg-white/20 p-3 rounded-xl">
+              <MdSupervisorAccount size={24} />
             </div>
-          </div>
+            <span className="font-semibold text-sm">講師管理</span>
+          </button>
 
-          {/* 授業記録管理カテゴリ */}
-          <div className="border-l-4 border-[#8DCCB3] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdEventNote className="mr-2 text-[#8DCCB3]" size={16} />
-              授業記録管理
-            </h3>
-            <div className="space-y-2">
-              <button
-                onClick={() => router.push('/lesson-notes')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
-              >
-                <MdEventNote className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">授業記録ノート</div>
-                  <div className="text-xs text-gray-500">授業記録・引き継ぎ事項管理</div>
-                </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
-              </button>
+          <button
+            onClick={() => router.push('/students')}
+            className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col items-center justify-center gap-2 text-white"
+          >
+            <div className="bg-white/20 p-3 rounded-xl">
+              <MdSchool size={24} />
             </div>
-          </div>
+            <span className="font-semibold text-sm">生徒管理</span>
+          </button>
+
+          <button
+            onClick={() => router.push('/test-scores')}
+            className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col items-center justify-center gap-2 text-white"
+          >
+            <div className="bg-white/20 p-3 rounded-xl">
+              <MdTrendingUp size={24} />
+            </div>
+            <span className="font-semibold text-sm">成績管理</span>
+          </button>
+
+          <button
+            onClick={() => router.push('/learning-admin')}
+            className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col items-center justify-center gap-2 text-white"
+          >
+            <div className="bg-white/20 p-3 rounded-xl">
+              <MdAnalytics size={24} />
+            </div>
+            <span className="font-semibold text-sm">学習記録</span>
+          </button>
+
+          <button
+            onClick={() => router.push('/lesson-notes')}
+            className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col items-center justify-center gap-2 text-white"
+          >
+            <div className="bg-white/20 p-3 rounded-xl">
+              <MdEventNote size={24} />
+            </div>
+            <span className="font-semibold text-sm">授業記録</span>
+          </button>
         </div>
+
+        <button
+          onClick={() => router.push('/messages')}
+          className="w-full mt-3 bg-pink-500 hover:bg-pink-600 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
+        >
+          <div className="flex items-center gap-3">
+            <div className="bg-white/20 p-3 rounded-xl">
+              <MdMessage size={24} />
+            </div>
+            <span className="font-bold">学習サポートルーム</span>
+          </div>
+          {unreadCount > 0 && (
+            <div className="bg-white text-pink-600 text-xs rounded-full px-3 py-1.5 font-bold shadow-md">
+              {unreadCount}
+            </div>
+          )}
+        </button>
       </div>
     </div>
 
     {/* メインエリア */}
     <div className="flex-1">
-      <div className="bg-white shadow rounded-lg p-6 border-t-4 border-[#8DCCB3]">
+      <div className="bg-white shadow-xl rounded-2xl p-6 border-l-4 border-[#8DCCB3]">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gray-800 flex items-center">
-            <MdEventNote className="mr-3 text-[#8DCCB3]" size={24} />
+            <div className="bg-[#6BB6A8] p-2.5 rounded-xl mr-3 shadow-md">
+              <MdEventNote className="text-white" size={20} />
+            </div>
             本日の授業予定
           </h3>
-          <div className="text-sm text-gray-500">
-            {new Date().toLocaleDateString('ja-JP', {
-              month: 'long',
-              day: 'numeric',
-              weekday: 'short'
-            })}
+          <div className="bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+            <div className="text-sm font-medium text-gray-600">
+              {new Date().toLocaleDateString('ja-JP', {
+                month: 'long',
+                day: 'numeric',
+                weekday: 'short'
+              })}
+            </div>
           </div>
         </div>
 
         {isLoadingSchedules ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8DCCB3]"></div>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-3 border-[#8DCCB3]"></div>
           </div>
         ) : todaySchedules.length > 0 ? (
           <div className="space-y-3">
             {todaySchedules.map((schedule, index) => (
               <div
                 key={schedule.id}
-                className="group hover:scale-[1.02] transition-all duration-200 p-4 bg-gradient-to-r from-[#8DCCB3]/8 via-[#8DCCB3]/5 to-transparent rounded-xl border border-[#8DCCB3]/15 hover:border-[#8DCCB3]/30 hover:shadow-md"
+                className="group hover:scale-[1.01] transition-all duration-200 bg-white hover:bg-gray-50 rounded-xl border border-gray-100 hover:border-[#8DCCB3]/40 shadow-sm hover:shadow-md p-4"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full ${
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-xl ${
                       schedule.lesson_type === 'face_to_face'
-                        ? 'bg-[#8DCCB3]'
-                        : 'bg-[#B8E0D0]'
-                    } shadow-sm`}></div>
+                        ? 'bg-[#6BB6A8]'
+                        : 'bg-[#8DCCB3]'
+                    }`}>
+                      <MdCalendarToday className="text-white" size={20} />
+                    </div>
                     <div>
-                      <div className="font-semibold text-gray-800 text-base">
+                      <div className="font-bold text-gray-900 text-base mb-1">
                         {schedule.start_time} - {schedule.end_time}
                       </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {schedule.subject}
-                        <span className="mx-1">•</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <div className="text-sm text-gray-600 flex items-center gap-2">
+                        <span className="font-medium">{schedule.subject}</span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                           schedule.lesson_type === 'face_to_face'
                             ? 'bg-[#8DCCB3]/20 text-[#5FA084]'
-                            : 'bg-[#B8E0D0]/20 text-[#6BB6A8]'
+                            : 'bg-[#B8E0D0]/30 text-[#6BB6A8]'
                         }`}>
                           {schedule.lesson_type === 'face_to_face' ? '対面' : '映像'}
                         </span>
                       </div>
                       {(schedule.student?.full_name || schedule.instructor?.full_name) && (
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-gray-500 mt-1.5">
                           {profile?.role === 'admin' ? (
                             <>
                               {schedule.student?.full_name && `生徒: ${schedule.student.full_name}`}
@@ -392,31 +331,29 @@ export default function DashboardPage() {
                       )}
                     </div>
                   </div>
-                  <div className="text-[#8DCCB3]/40 group-hover:text-[#8DCCB3] transition-colors">
-                    <MdCalendarToday size={16} />
-                  </div>
+                  <div className="text-gray-300 group-hover:text-[#8DCCB3] transition-colors text-xl">›</div>
                 </div>
               </div>
             ))}
             <button
               onClick={() => router.push('/schedule')}
-              className="w-full text-center py-4 text-[#8DCCB3] hover:text-[#5FA084] hover:bg-[#8DCCB3]/10 rounded-xl transition-all duration-200 text-sm font-semibold border-2 border-dashed border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40 group"
+              className="w-full text-center py-4 bg-[#6BB6A8] hover:bg-[#5FA084] text-white rounded-xl transition-all duration-200 text-sm font-bold shadow-md"
             >
               <div className="flex items-center justify-center space-x-2">
-                <MdCalendarToday className="group-hover:scale-110 transition-transform" size={16} />
+                <MdCalendarToday size={18} />
                 <span>全ての予定を表示</span>
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
               </div>
             </button>
           </div>
         ) : (
-          <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-            <MdEventNote className="mx-auto text-gray-300 mb-4" size={48} />
-            <p className="text-gray-500 font-medium mb-2">本日の授業予定はありません</p>
-            {/* <p className="text-sm text-gray-400">今日はゆっくりお過ごしください</p> */}
+          <div className="text-center py-16 bg-gray-50 rounded-2xl border border-gray-200">
+            <div className="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MdEventNote className="text-gray-400" size={40} />
+            </div>
+            <p className="text-gray-700 font-semibold text-lg mb-6">本日の授業予定はありません</p>
             <button
               onClick={() => router.push('/schedule')}
-              className="mt-4 text-[#8DCCB3] hover:text-[#5FA084] text-sm font-medium underline hover:no-underline transition-all"
+              className="bg-[#6BB6A8] hover:bg-[#5FA084] text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm"
             >
               スケジュール管理へ
             </button>
@@ -430,89 +367,88 @@ export default function DashboardPage() {
   <div className="flex flex-col lg:flex-row gap-6">
     {/* 講師サイドバー */}
     <div className="w-full lg:w-80">
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-white shadow-xl rounded-2xl p-6">
         <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
-          <MdSupervisorAccount className="mr-2 text-[#8DCCB3]" />
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-2.5 rounded-xl mr-3 shadow-md">
+            <MdSupervisorAccount className="text-white" size={20} />
+          </div>
           講師メニュー
         </h2>
-        
-        <div className="space-y-3">
+
+        <div className="space-y-4">
           {/* 授業カテゴリ */}
-          <div className="border-l-4 border-[#8DCCB3] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdCalendarToday className="mr-2 text-[#8DCCB3]" size={16} />
+          <div>
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
               授業
             </h3>
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/schedule')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+                className="w-full bg-white hover:bg-gray-50 rounded-xl p-4 transition-all duration-200 group border border-gray-100 hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
               >
-                <MdCalendarToday className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">授業スケジュール</div>
-                  <div className="text-xs text-gray-500">今日の授業予定確認</div>
+                <div className="flex items-center">
+                  <div className="bg-[#8DCCB3]/10 p-3 rounded-xl mr-3 group-hover:bg-[#8DCCB3]/20 transition-colors">
+                    <MdCalendarToday className="text-[#5FA084]" size={20} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-semibold text-gray-900 text-sm">授業スケジュール</div>
+                    <div className="text-xs text-gray-500 mt-0.5">今日の授業予定確認</div>
+                  </div>
+                  <div className="text-gray-300 group-hover:text-[#8DCCB3] transition-colors text-xl">›</div>
                 </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
               </button>
             </div>
           </div>
 
           {/* コミュニケーションカテゴリ */}
-          <div className="border-l-4 border-[#B8E0D0] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdChat className="mr-2 text-[#8DCCB3]" size={16} />
+          <div>
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
               コミュニケーション
             </h3>
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/messages')}
-                className="w-full flex items-center p-4 text-left bg-gradient-to-br from-pink-50 via-rose-50/80 to-pink-100/60 border-2 border-pink-200/60 rounded-xl transition-all duration-300 shadow-lg group relative overflow-hidden backdrop-blur-sm"
+                className="w-full bg-gradient-to-br from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 rounded-xl p-4 transition-all duration-200 group border border-pink-200/50 hover:border-pink-300/60 shadow-md hover:shadow-lg"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-100/40 to-rose-100/30 opacity-60"></div>
-                <div className="relative z-10 flex items-center w-full">
-                  <div className="mr-3 p-2.5 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-xl shadow-lg">
-                    <MdMessage size={20} />
+                <div className="flex items-center">
+                  <div className="bg-gradient-to-br from-pink-400 to-rose-500 p-3 rounded-xl mr-3 shadow-md">
+                    <MdMessage className="text-white" size={20} />
                   </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-pink-600 text-base mb-1 tracking-wide">学習サポートルーム</div>
-                    <div className="text-sm text-gray-600 font-medium">担当生徒との学習相談</div>
-                    <div className="text-xs text-pink-500/80 mt-1.5 flex items-center">
-                      <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                      </svg>
-                      いつでも気軽に相談
-                    </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-bold text-pink-600 text-sm">学習サポートルーム</div>
+                    <div className="text-xs text-gray-600 mt-0.5">担当生徒との学習相談</div>
                   </div>
                   {unreadCount > 0 && (
-                    <div className="bg-gradient-to-r from-red-400 to-pink-500 text-white text-xs rounded-full px-3 py-1.5 font-bold mr-3 shadow-lg animate-pulse">
+                    <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full px-2.5 py-1 font-bold mr-2 shadow-md">
                       {unreadCount}
                     </div>
                   )}
-                  <div className="text-pink-400 font-bold text-lg">›</div>
+                  <div className="text-pink-300 group-hover:text-pink-500 transition-colors text-xl">›</div>
                 </div>
               </button>
             </div>
           </div>
 
           {/* 授業記録カテゴリ */}
-          <div className="border-l-4 border-[#8DCCB3] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdEventNote className="mr-2 text-[#8DCCB3]" size={16} />
+          <div>
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
               授業記録
             </h3>
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/lesson-notes')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+                className="w-full bg-white hover:bg-gray-50 rounded-xl p-4 transition-all duration-200 group border border-gray-100 hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
               >
-                <MdEventNote className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">授業記録ノート</div>
-                  <div className="text-xs text-gray-500">授業内容記録・引き継ぎ事項</div>
+                <div className="flex items-center">
+                  <div className="bg-[#8DCCB3]/10 p-3 rounded-xl mr-3 group-hover:bg-[#8DCCB3]/20 transition-colors">
+                    <MdEventNote className="text-[#5FA084]" size={20} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-semibold text-gray-900 text-sm">授業記録ノート</div>
+                    <div className="text-xs text-gray-500 mt-0.5">授業内容記録・引き継ぎ事項</div>
+                  </div>
+                  <div className="text-gray-300 group-hover:text-[#8DCCB3] transition-colors text-xl">›</div>
                 </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
               </button>
             </div>
           </div>
@@ -557,73 +493,92 @@ export default function DashboardPage() {
   <div className="flex flex-col lg:flex-row gap-6">
     {/* 生徒サイドバー */}
     <div className="w-full lg:w-80">
-      <div className="bg-white shadow rounded-lg p-6">
+      <div className="bg-white shadow-xl rounded-2xl p-6">
         <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
-          <MdSchool className="mr-2 text-[#8DCCB3]" />
+          <div className="bg-gradient-to-br from-green-500 to-green-600 p-2.5 rounded-xl mr-3 shadow-md">
+            <MdSchool className="text-white" size={20} />
+          </div>
           生徒メニュー
         </h2>
-        
-        <div className="space-y-3">
+
+        <div className="space-y-4">
           {/* 学習カテゴリ */}
-          <div className="border-l-4 border-[#8DCCB3] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdCalendarToday className="mr-2 text-[#8DCCB3]" size={16} />
+          <div>
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
               学習
             </h3>
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/schedule')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+                className="w-full bg-white hover:bg-gray-50 rounded-xl p-4 transition-all duration-200 group border border-gray-100 hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
               >
-                <MdCalendarToday className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">今日の授業</div>
-                  <div className="text-xs text-gray-500">本日の予定を確認</div>
+                <div className="flex items-center">
+                  <div className="bg-[#8DCCB3]/10 p-3 rounded-xl mr-3 group-hover:bg-[#8DCCB3]/20 transition-colors">
+                    <MdCalendarToday className="text-[#5FA084]" size={20} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-semibold text-gray-900 text-sm">今日の授業</div>
+                    <div className="text-xs text-gray-500 mt-0.5">本日の予定を確認</div>
+                  </div>
+                  <div className="text-gray-300 group-hover:text-[#8DCCB3] transition-colors text-xl">›</div>
                 </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
               </button>
-              
+
               <button
                 onClick={() => router.push('/learning-records')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+                className="w-full bg-white hover:bg-gray-50 rounded-xl p-4 transition-all duration-200 group border border-gray-100 hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
               >
-                <MdAnalytics className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">学習記録</div>
-                  <div className="text-xs text-gray-500">学習状況を記録</div>
+                <div className="flex items-center">
+                  <div className="bg-[#8DCCB3]/10 p-3 rounded-xl mr-3 group-hover:bg-[#8DCCB3]/20 transition-colors">
+                    <MdAnalytics className="text-[#5FA084]" size={20} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-semibold text-gray-900 text-sm">学習記録</div>
+                    <div className="text-xs text-gray-500 mt-0.5">学習状況を記録</div>
+                  </div>
+                  <div className="text-gray-300 group-hover:text-[#8DCCB3] transition-colors text-xl">›</div>
                 </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
               </button>
 
               <button
                 onClick={() => router.push('/my-test-scores')}
-                className="w-full flex items-center p-3 text-left hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 group border border-transparent hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
+                className="w-full bg-white hover:bg-gray-50 rounded-xl p-4 transition-all duration-200 group border border-gray-100 hover:border-[#8DCCB3]/30 shadow-sm hover:shadow-md"
               >
-                <MdTrendingUp className="mr-3 text-[#8DCCB3] group-hover:text-[#5FA084]" size={20} />
-                <div className="flex-1">
-                  <div className="font-medium text-gray-900 group-hover:text-gray-800">マイ成績</div>
-                  <div className="text-xs text-gray-500">テスト結果の入力・確認</div>
+                <div className="flex items-center">
+                  <div className="bg-[#8DCCB3]/10 p-3 rounded-xl mr-3 group-hover:bg-[#8DCCB3]/20 transition-colors">
+                    <MdTrendingUp className="text-[#5FA084]" size={20} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-semibold text-gray-900 text-sm">マイ成績</div>
+                    <div className="text-xs text-gray-500 mt-0.5">テスト結果の入力・確認</div>
+                  </div>
+                  <div className="text-gray-300 group-hover:text-[#8DCCB3] transition-colors text-xl">›</div>
                 </div>
-                <div className="text-[#8DCCB3]/60 group-hover:text-[#8DCCB3]">›</div>
               </button>
             </div>
           </div>
 
           {/* 映像授業カテゴリ */}
-          <div className="border-l-4 border-[#5FA084] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdPlayCircleOutline className="mr-2 text-[#8DCCB3]" size={16} />
+          <div>
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
               映像授業
             </h3>
             <div className="space-y-2">
-              <div className="bg-gradient-to-r from-[#8DCCB3]/10 to-[#B8E0D0]/10 p-4 rounded-lg border border-[#8DCCB3]/20">
-                <h4 className="text-sm font-medium text-gray-800 mb-3 text-center">ブロードバンド予備校</h4>
+              <div className="bg-gradient-to-br from-[#8DCCB3]/10 to-[#B8E0D0]/20 p-5 rounded-xl border border-[#8DCCB3]/20 shadow-sm">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="bg-gradient-to-br from-[#8DCCB3] to-[#6BB6A8] p-2 rounded-lg mr-2">
+                    <MdPlayCircleOutline className="text-white" size={18} />
+                  </div>
+                  <h4 className="text-sm font-bold text-gray-800">ブロードバンド予備校</h4>
+                </div>
                 <div className="flex justify-center mb-3">
-                  <img 
-                    src="/qr_bby.png" 
-                    alt="ブロードバンド予備校QRコード"
-                    className="w-32 h-32 border-2 border-white rounded-lg shadow-md"
-                  />
+                  <div className="bg-white p-2 rounded-xl shadow-md">
+                    <img
+                      src="/qr_bby.png"
+                      alt="ブロードバンド予備校QRコード"
+                      className="w-28 h-28 rounded-lg"
+                    />
+                  </div>
                 </div>
                 <p className="text-xs text-gray-600 text-center leading-relaxed">
                   iPadでQRコードを読み取って<br />
@@ -634,38 +589,29 @@ export default function DashboardPage() {
           </div>
 
           {/* コミュニケーションカテゴリ */}
-          <div className="border-l-4 border-[#B8E0D0] pl-4">
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-              <MdChat className="mr-2 text-[#8DCCB3]" size={16} />
+          <div>
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 px-1">
               コミュニケーション
             </h3>
             <div className="space-y-2">
               <button
                 onClick={() => router.push('/messages')}
-                className="w-full flex items-center p-4 text-left bg-gradient-to-br from-pink-50 via-rose-50/80 to-pink-100/60 border-2 border-pink-200/60 rounded-xl transition-all duration-300 shadow-lg group relative overflow-hidden backdrop-blur-sm"
+                className="w-full bg-gradient-to-br from-pink-50 to-rose-50 hover:from-pink-100 hover:to-rose-100 rounded-xl p-4 transition-all duration-200 group border border-pink-200/50 hover:border-pink-300/60 shadow-md hover:shadow-lg"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-pink-100/40 to-rose-100/30 opacity-60"></div>
-                <div className="relative z-10 flex items-center w-full">
-                  <div className="mr-3 p-2.5 bg-gradient-to-br from-pink-400 to-rose-400 text-white rounded-xl shadow-lg">
-                    <MdMessage size={20} />
+                <div className="flex items-center">
+                  <div className="bg-gradient-to-br from-pink-400 to-rose-500 p-3 rounded-xl mr-3 shadow-md">
+                    <MdMessage className="text-white" size={20} />
                   </div>
-                  <div className="flex-1">
-                    <div className="font-bold text-pink-600 text-base mb-1 tracking-wide">学習サポートルーム</div>
-                    <div className="text-sm text-gray-600 font-medium">謟師との学習相談</div>
-                    <div className="text-xs text-pink-500/80 mt-1.5 flex items-center">
-                      <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                        <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                      </svg>
-                      いつでも気軽に相談
-                    </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-bold text-pink-600 text-sm">学習サポートルーム</div>
+                    <div className="text-xs text-gray-600 mt-0.5">講師との学習相談</div>
                   </div>
                   {unreadCount > 0 && (
-                    <div className="bg-gradient-to-r from-red-400 to-pink-500 text-white text-xs rounded-full px-3 py-1.5 font-bold mr-3 shadow-lg animate-pulse">
+                    <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded-full px-2.5 py-1 font-bold mr-2 shadow-md">
                       {unreadCount}
                     </div>
                   )}
-                  <div className="text-pink-400 font-bold text-lg">›</div>
+                  <div className="text-pink-300 group-hover:text-pink-500 transition-colors text-xl">›</div>
                 </div>
               </button>
             </div>
