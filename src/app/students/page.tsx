@@ -174,24 +174,41 @@ export default function StudentsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow">
+      <header className="bg-[#6BB6A8] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                ← ダッシュボードに戻る
-              </button>
-              <h1 className="text-2xl font-bold text-gray-900">生徒管理</h1>
+          <div className="flex justify-between items-center py-5">
+            <div className="flex items-center space-x-3">
+              <div className="bg-white rounded-xl p-2 shadow-md">
+                <img src="/main_icon.png" alt="ツナグ" className="h-9 w-9" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">生徒管理</h1>
+              </div>
             </div>
             <button
-              onClick={() => setShowAddForm(true)}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium"
+              onClick={() => router.push('/dashboard')}
+              className="bg-white hover:bg-gray-100 text-[#5FA084] px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
             >
-              新しい生徒を追加
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>ダッシュボード</span>
             </button>
+          </div>
+
+          {/* アクションボタン行 */}
+          <div className="border-t border-white/20 py-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="flex items-center space-x-2 bg-white hover:bg-gray-50 text-[#6BB6A8] px-6 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>新しい生徒を追加</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -356,52 +373,6 @@ export default function StudentsPage() {
             </div>
           </div>
 
-          {/* 統計情報 */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white shadow rounded-lg p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="text-green-600 text-sm font-medium">{students.length}</span>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">総生徒数</p>
-                  <p className="text-lg font-semibold text-gray-900">{students.length}名</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 text-sm font-medium">{instructors.length}</span>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">講師数</p>
-                  <p className="text-lg font-semibold text-gray-900">{instructors.length}名</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                    <span className="text-purple-600 text-sm font-medium">
-                      {instructors.length > 0 ? Math.round(students.length / instructors.length) : 0}
-                    </span>
-                  </div>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">講師1人あたり</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {instructors.length > 0 ? Math.round(students.length / instructors.length) : 0}名
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </main>
     </div>

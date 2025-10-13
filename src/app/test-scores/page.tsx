@@ -220,29 +220,34 @@ export default function TestScoresPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-6">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-              <div className="mb-4 sm:mb-0">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">テスト成績管理</h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  生徒を選択してテスト結果を閲覧・分析できます
-                </p>
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-[#6BB6A8] shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-5">
+            <div className="flex items-center space-x-3">
+              <div className="bg-white rounded-xl p-2 shadow-md">
+                <img src="/main_icon.png" alt="ツナグ" className="h-9 w-9" />
               </div>
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8DCCB3] transition-colors"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                  ダッシュボードに戻る
-                </button>
+              <div>
+                <h1 className="text-2xl font-bold text-white">テスト成績管理</h1>
               </div>
             </div>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="bg-white hover:bg-gray-100 text-[#5FA084] px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>ダッシュボード</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div className="bg-white shadow-xl rounded-2xl">
+          <div className="px-4 py-5 sm:p-6">
 
             {/* 生徒選択セクション */}
             <div className="mb-6">
@@ -469,7 +474,7 @@ export default function TestScoresPage() {
                                             score.score < score.class_average ? 'text-red-600' :
                                             'text-gray-600'
                                           }`}>
-                                            {score.class_average}点 ({score.score > score.class_average ? '+' : ''}{score.score - score.class_average})
+                                            {score.class_average.toFixed(1)}点 ({score.score > score.class_average ? '+' : ''}{(score.score - score.class_average).toFixed(1)})
                                           </span>
                                         </div>
                                       )}
@@ -739,8 +744,7 @@ export default function TestScoresPage() {
             )}
           </div>
         </div>
-      </div>
-
+      </main>
     </div>
   )
 }

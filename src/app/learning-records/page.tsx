@@ -23,11 +23,20 @@ export default function LearningRecordsPage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
   const [studySessions, setStudySessions] = useState<StudySession[]>([])
-  const [testResults, setTestResults] = useState<TestResult[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'study' | 'tests'>('study')
   const [showStudyForm, setShowStudyForm] = useState(false)
+  const [testResults, setTestResults] = useState<TestResult[]>([])
   const [showTestForm, setShowTestForm] = useState(false)
+
+  // テスト結果フォーム用の状態
+  const [testFormData, setTestFormData] = useState({
+    test_name: '',
+    subject: '',
+    test_date: '',
+    score: '',
+    max_score: '',
+    notes: ''
+  })
 
   // ストップウォッチ用の状態
   const [stopwatchTime, setStopwatchTime] = useState(0) // 経過時間（秒）
@@ -35,34 +44,13 @@ export default function LearningRecordsPage() {
   const [stopwatchInterval, setStopwatchInterval] = useState<NodeJS.Timeout | null>(null)
 
   // 学習時間記録フォーム用の状態
-  const [studyFormData, setStudyFormData] = useState<{
-    subject: string
-    study_date: string
-    duration_minutes: string
-    notes: string
-  }>({
+  const [studyFormData, setStudyFormData] = useState({
     subject: '',
-    study_date: new Date().toISOString().split('T')[0],
+    study_date: '',
     duration_minutes: '',
     notes: ''
   })
 
-  // テスト結果記録フォーム用の状態
-  const [testFormData, setTestFormData] = useState<{
-    test_name: string
-    subject: string
-    test_date: string
-    score: string
-    max_score: string
-    notes: string
-  }>({
-    test_name: '',
-    subject: '',
-    test_date: new Date().toISOString().split('T')[0],
-    score: '',
-    max_score: '',
-    notes: ''
-  })
 
   useEffect(() => {
     if (!loading && (!user || !profile)) {
@@ -74,6 +62,10 @@ export default function LearningRecordsPage() {
     if (profile) {
       fetchData()
     }
+    // 初回マウント時にフォームの日付を設定
+    const today = new Date().toISOString().split('T')[0]
+    setStudyFormData(prev => ({ ...prev, study_date: today }))
+    setTestFormData(prev => ({ ...prev, test_date: today }))
   }, [profile])
 
   const fetchData = async () => {
@@ -139,9 +131,10 @@ export default function LearningRecordsPage() {
       if (error) throw error
 
       // フォームリセット
+      const today = new Date().toISOString().split('T')[0]
       setStudyFormData({
         subject: '',
-        study_date: new Date().toISOString().split('T')[0],
+        study_date: today,
         duration_minutes: '',
         notes: ''
       })
@@ -184,10 +177,11 @@ export default function LearningRecordsPage() {
       if (error) throw error
 
       // フォームリセット
+      const today = new Date().toISOString().split('T')[0]
       setTestFormData({
         test_name: '',
         subject: '',
-        test_date: new Date().toISOString().split('T')[0],
+        test_date: today,
         score: '',
         max_score: '',
         notes: ''
@@ -318,95 +312,28 @@ export default function LearningRecordsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b-2 border-[#8DCCB3]">
+      <header className="bg-[#6BB6A8] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* デスクトップレイアウト */}
-          <div className="hidden md:flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <img 
-                src="/main_icon.png" 
-                alt="ツナグ" 
-                className="h-12 w-12"
-              />
-              <div>
-                <h1 className="text-3xl font-bold text-[#8DCCB3]">学習記録</h1>
-                <p className="text-sm text-gray-600 mt-1">自宅学習・テスト結果の記録・管理</p>
-              </div>
-            </div>
+          <div className="flex justify-between items-center py-5">
             <div className="flex items-center space-x-3">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-[#8DCCB3] px-4 py-2 rounded-lg transition-all duration-200 border border-gray-200 hover:border-[#8DCCB3]/30 hover:bg-[#8DCCB3]/5"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span className="text-sm font-medium">ダッシュボード</span>
-              </button>
-            </div>
-          </div>
-
-          {/* モバイルレイアウト */}
-          <div className="md:hidden py-4">
-            <div className="flex items-center space-x-3 mb-3">
-              <img 
-                src="/main_icon.png" 
-                alt="ツナグ" 
-                className="h-10 w-10 flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-[#8DCCB3] leading-tight">
-                  学習記録
-                </h1>
-                <p className="text-sm text-gray-600 mt-1">
-                  自宅学習・テスト結果の記録
-                </p>
+              <div className="bg-white rounded-xl p-2 shadow-md">
+                <img src="/main_icon.png" alt="ツナグ" className="h-9 w-9" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">学習記録</h1>
               </div>
             </div>
-            <div className="flex justify-center">
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center justify-center space-x-2 text-gray-600 hover:text-[#8DCCB3] px-4 py-2 rounded-lg transition-all duration-200 bg-[#8DCCB3]/5 hover:bg-[#8DCCB3]/10 border border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40 w-full max-w-xs shadow-sm hover:shadow-md"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span className="text-sm font-medium">ダッシュボード</span>
-              </button>
-            </div>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="bg-white hover:bg-gray-100 text-[#5FA084] px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>ダッシュボード</span>
+            </button>
           </div>
 
-          {/* タブナビゲーション */}
-          <div className="border-t border-[#8DCCB3]/20">
-            <div className="flex space-x-8">
-              <button
-                onClick={() => setActiveTab('study')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'study'
-                    ? 'border-[#8DCCB3] text-[#8DCCB3]'
-                    : 'border-transparent text-gray-500 hover:text-[#8DCCB3] hover:border-[#8DCCB3]/50'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <MdAccessTime size={18} />
-                  <span>学習記録</span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('tests')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 ${
-                  activeTab === 'tests'
-                    ? 'border-[#8DCCB3] text-[#8DCCB3]'
-                    : 'border-transparent text-gray-500 hover:text-[#8DCCB3] hover:border-[#8DCCB3]/50'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <MdAssignment size={18} />
-                  <span>テスト結果</span>
-                </div>
-              </button>
-            </div>
-          </div>
         </div>
       </header>
 
@@ -444,9 +371,9 @@ export default function LearningRecordsPage() {
             </div>
           </div>
 
-          {activeTab === 'study' && (
+          {/* 学習記録追加ボタン */}
+          <div>
             <div>
-              {/* 学習記録追加ボタン */}
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-[#4A5568] flex items-center space-x-2">
                   <MdAccessTime className="text-[#8DCCB3]" />
@@ -499,9 +426,10 @@ export default function LearningRecordsPage() {
                 )}
               </div>
             </div>
-          )}
+          </div>
 
-          {activeTab === 'tests' && (
+          {/* テスト結果タブは削除（別のテスト成績管理画面を使用） */}
+          {false && (
             <div>
               {/* テスト結果追加ボタン */}
               <div className="flex justify-between items-center mb-6">
@@ -716,7 +644,8 @@ export default function LearningRecordsPage() {
       )}
 
       {/* テスト結果追加フォーム */}
-      {showTestForm && (
+      {/* テスト結果フォームは削除（別のテスト成績管理画面を使用） */}
+      {false && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-md border border-[#8DCCB3]/10">
             <div className="px-6 py-4 border-b border-[#8DCCB3]/10">

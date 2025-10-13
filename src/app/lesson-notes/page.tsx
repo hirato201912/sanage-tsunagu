@@ -359,17 +359,31 @@ export default function LessonNotesPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 統一ヘッダー */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-[#6BB6A8] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <img src="/main_icon.png" alt="ツナグ" className="h-10 w-10" />
+          <div className="flex justify-between items-center py-5">
+            <div className="flex items-center space-x-3">
+              <div className="bg-white rounded-xl p-2 shadow-md">
+                <img src="/main_icon.png" alt="ツナグ" className="h-9 w-9" />
+              </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-[#8DCCB3]">授業記録ノート</h1>
-                <p className="text-sm text-gray-600 mt-1">授業の記録と講師間の引き継ぎ事項を管理</p>
+                <h1 className="text-2xl font-bold text-white">授業記録ノート</h1>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="bg-white hover:bg-gray-100 text-[#5FA084] px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>ダッシュボード</span>
+            </button>
+          </div>
+
+          {/* アクションボタン行 */}
+          <div className="border-t border-white/20 py-4">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => {
                   setFormData({
@@ -388,21 +402,12 @@ export default function LessonNotesPage() {
                     loadSavedFormData()
                   }, 100)
                 }}
-                className="inline-flex items-center px-4 py-2 bg-[#8DCCB3] hover:bg-[#5FA084] text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                className="flex items-center space-x-2 bg-white hover:bg-gray-50 text-[#6BB6A8] px-6 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white"
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                新しい記録を作成
-              </button>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#8DCCB3] transition-colors"
-              >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                ダッシュボードに戻る
+                <span>新しい記録を作成</span>
               </button>
             </div>
           </div>

@@ -77,7 +77,6 @@ export default function MyTestScoresPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingExam, setEditingExam] = useState<TestExam | null>(null)
-  const [activeTab, setActiveTab] = useState<'list' | 'analytics'>('list')
   const [formData, setFormData] = useState({
     test_period: '',
     test_date: '',
@@ -306,63 +305,39 @@ export default function MyTestScoresPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ヘッダー */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-[#6BB6A8] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <img src="/main_icon.png" alt="ツナグ" className="h-10 w-10" />
+          <div className="flex justify-between items-center py-5">
+            <div className="flex items-center space-x-3">
+              <div className="bg-white rounded-xl p-2 shadow-md">
+                <img src="/main_icon.png" alt="ツナグ" className="h-9 w-9" />
+              </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-[#8DCCB3]">
-                  マイ成績
-                </h1>
-                <p className="text-sm text-gray-600 mt-1">テスト成績の管理・分析</p>
+                <h1 className="text-2xl font-bold text-white">マイ成績</h1>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={() => initializeForm()}
-                className="bg-[#8DCCB3] hover:bg-[#5FA084] text-white px-4 py-2 md:px-6 md:py-3 rounded-lg text-sm font-medium transition-colors duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span className="hidden sm:inline">新しい試験</span>
-                <span className="sm:hidden">追加</span>
-              </button>
-              <button
-                onClick={() => router.push('/dashboard')}
-                className="flex items-center space-x-2 text-gray-600 hover:text-[#8DCCB3] px-3 py-2 md:px-4 md:py-3 rounded-lg transition-colors duration-200 hover:bg-[#8DCCB3]/10"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span className="text-sm font-medium hidden sm:inline">戻る</span>
-              </button>
-            </div>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="bg-white hover:bg-gray-100 text-[#5FA084] px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span>ダッシュボード</span>
+            </button>
           </div>
 
-          {/* タブナビゲーション */}
-          <div className="border-t border-gray-200/50">
-            <div className="flex space-x-8">
+          {/* アクションボタン行 */}
+          <div className="border-t border-white/20 py-4">
+            <div className="flex items-center gap-3">
               <button
-                onClick={() => setActiveTab('list')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === 'list'
-                    ? 'border-[#8DCCB3] text-[#8DCCB3]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-[#8DCCB3]/30'
-                }`}
+                onClick={() => initializeForm()}
+                className="flex items-center space-x-2 bg-white hover:bg-gray-50 text-[#6BB6A8] px-6 py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-200 border-2 border-white"
               >
-                成績一覧
-              </button>
-              <button
-                onClick={() => setActiveTab('analytics')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === 'analytics'
-                    ? 'border-[#8DCCB3] text-[#8DCCB3]'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-[#8DCCB3]/30'
-                }`}
-              >
-                成績分析
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span>新しい試験を追加</span>
               </button>
             </div>
           </div>
@@ -556,8 +531,7 @@ export default function MyTestScoresPage() {
         )}
 
         {/* メインコンテンツ */}
-        {activeTab === 'list' && (
-          <div className="space-y-6">
+        <div className="space-y-6">
             {testExams.length === 0 ? (
               <div className="text-center py-16">
                 <div className="mx-auto w-20 h-20 bg-[#8DCCB3] rounded-full flex items-center justify-center mb-6">
@@ -687,38 +661,7 @@ export default function MyTestScoresPage() {
                 })}
               </div>
             )}
-          </div>
-        )}
-
-        {/* 成績分析タブ */}
-        {activeTab === 'analytics' && (
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">成績分析</h3>
-            {testExams.length >= 2 ? (
-              <div className="space-y-8">
-                {/* 科目別推移 */}
-                <div>
-                  <h4 className="text-lg font-semibold mb-4">科目別成績推移</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* 推移グラフのプレースホルダー */}
-                    <div className="p-6 bg-gray-50 rounded-xl text-center">
-                      <p className="text-gray-600">推移グラフ機能は開発中です</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <p className="text-gray-600">成績分析には2つ以上の試験データが必要です</p>
-              </div>
-            )}
-          </div>
-        )}
+        </div>
       </main>
     </div>
   )
