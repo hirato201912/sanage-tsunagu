@@ -16,11 +16,9 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
   const { profile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [students, setStudents] = useState<Profile[]>([])
-  const [instructors, setInstructors] = useState<Profile[]>([])
 
   const [formData, setFormData] = useState({
     student_id: profile?.role === 'student' ? profile.id : '',
-    instructor_id: profile?.role === 'instructor' ? profile.id : '',
     lesson_type: 'video' as 'video' | 'face_to_face',
     subject: '',
     lesson_date: '',
@@ -50,8 +48,6 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
 
   const fetchUsers = async () => {
   try {
-    console.log('Fetching users...')
-    
     // 生徒一覧を取得
     const { data: studentsData, error: studentsError } = await supabase
       .from('profiles')
@@ -59,21 +55,7 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
       .eq('role', 'student')
       .order('full_name')
 
-    console.log('Students data:', studentsData)
-    console.log('Students error:', studentsError)
-
-    // 講師一覧を取得
-    const { data: instructorsData, error: instructorsError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('role', 'instructor')
-      .order('full_name')
-
-    console.log('Instructors data:', instructorsData)
-    console.log('Instructors error:', instructorsError)
-
     setStudents(studentsData || [])
-    setInstructors(instructorsData || [])
   } catch (error) {
     console.error('Error fetching users:', error)
   }
@@ -90,7 +72,7 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
         .from('schedules')
         .insert([{
           student_id: formData.student_id,
-          instructor_id: formData.instructor_id || null,
+          instructor_id: null,
           lesson_type: formData.lesson_type,
           subject: formData.subject,
           lesson_date: formData.lesson_date,
@@ -106,7 +88,6 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
       // フォームリセット
       const resetData = {
         student_id: profile?.role === 'student' ? profile.id : '',
-        instructor_id: profile?.role === 'instructor' ? profile.id : '',
         lesson_type: 'video' as 'video' | 'face_to_face',
         subject: '',
         lesson_date: initialDate ? initialDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -137,7 +118,7 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-screen overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">
-            {profile?.role === 'student' ? '予定の追加' : 'スケジュール作成'}
+            単発で追加
           </h2>
           <button
             onClick={onClose}

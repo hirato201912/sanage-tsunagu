@@ -25,11 +25,9 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
   const { profile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [students, setStudents] = useState<Profile[]>([])
-  const [instructors, setInstructors] = useState<Profile[]>([])
 
   const [formData, setFormData] = useState({
     student_id: '',
-    instructor_id: profile?.role === 'instructor' ? profile.id : '',
     lesson_type: 'video' as 'video' | 'face_to_face',
     subject: '',
     day_of_week: 1, // デフォルトは月曜日
@@ -63,15 +61,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
         .eq('role', 'student')
         .order('full_name')
 
-      // 講師一覧を取得
-      const { data: instructorsData, error: instructorsError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'instructor')
-        .order('full_name')
-
       setStudents(studentsData || [])
-      setInstructors(instructorsData || [])
     } catch (error) {
       console.error('Error fetching users:', error)
     }
@@ -86,7 +76,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
       
       const recurringData = {
         student_id: formData.student_id,
-        instructor_id: formData.instructor_id || null,
+        instructor_id: null,
         lesson_type: formData.lesson_type,
         subject: formData.subject,
         day_of_week: formData.day_of_week,
@@ -108,7 +98,6 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
       // フォームリセット
       const resetData = {
         student_id: '',
-        instructor_id: profile?.role === 'instructor' ? profile.id : '',
         lesson_type: 'video' as 'video' | 'face_to_face',
         subject: '',
         day_of_week: 1,
@@ -141,7 +130,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-screen overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">定期スケジュール作成</h2>
+          <h2 className="text-xl font-bold">定期で追加</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -170,27 +159,6 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
               ))}
             </select>
           </div>
-
-          {/* 講師選択（塾長の場合のみ） */}
-          {profile?.role === 'admin' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                講師
-              </label>
-              <select
-                value={formData.instructor_id}
-                onChange={(e) => handleChange('instructor_id', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#8DCCB3]/50 focus:border-[#8DCCB3] transition-all duration-200 hover:border-[#8DCCB3]/60"
-              >
-                <option value="">講師を選択してください</option>
-                {instructors.map((instructor) => (
-                  <option key={instructor.id} value={instructor.id}>
-                    {instructor.full_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
 
           {/* 授業タイプ */}
           <div>
@@ -326,9 +294,9 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-2.5 bg-[#B8E0D0] text-[#4A5568] rounded-lg hover:bg-[#8DCCB3] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="flex-1 px-4 py-2.5 bg-[#6BB6A8] text-white rounded-lg hover:bg-[#5FA084] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
-              {loading ? '作成中...' : '定期スケジュール作成'}
+              {loading ? '作成中...' : '作成'}
             </button>
           </div>
         </form>
