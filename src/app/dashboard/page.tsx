@@ -242,7 +242,7 @@ export default function DashboardPage() {
 
         <button
           onClick={() => router.push('/messages')}
-          className="w-full mt-3 bg-pink-500 hover:bg-pink-600 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
+          className="relative w-full mt-3 bg-pink-400 hover:bg-pink-500 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
         >
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-3 rounded-xl">
@@ -251,8 +251,11 @@ export default function DashboardPage() {
             <span className="font-bold">学習サポートルーム</span>
           </div>
           {unreadCount > 0 && (
-            <div className="bg-white text-pink-600 text-xs rounded-full px-3 py-1.5 font-bold shadow-md">
-              {unreadCount}
+            <div className="relative flex items-center gap-2">
+              <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75"></div>
+              <div className="relative bg-red-500 text-white text-sm rounded-full min-w-[32px] h-8 px-3 font-extrabold shadow-xl flex items-center justify-center border-3 border-white animate-pulse">
+                {unreadCount}
+              </div>
             </div>
           )}
         </button>
@@ -302,7 +305,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <div className="font-bold text-gray-900 text-base mb-1">
-                        {schedule.start_time} - {schedule.end_time}
+                        {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)}
                       </div>
                       <div className="text-sm text-gray-600 flex items-center gap-2">
                         <span className="font-medium">{schedule.subject}</span>
@@ -399,7 +402,7 @@ export default function DashboardPage() {
 
         <button
           onClick={() => router.push('/messages')}
-          className="w-full mt-3 bg-pink-500 hover:bg-pink-600 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
+          className="relative w-full mt-3 bg-pink-400 hover:bg-pink-500 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
         >
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-3 rounded-xl">
@@ -408,8 +411,11 @@ export default function DashboardPage() {
             <span className="font-bold">学習サポートルーム</span>
           </div>
           {unreadCount > 0 && (
-            <div className="bg-white text-pink-600 text-xs rounded-full px-3 py-1.5 font-bold shadow-md">
-              {unreadCount}
+            <div className="relative flex items-center gap-2">
+              <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75"></div>
+              <div className="relative bg-red-500 text-white text-sm rounded-full min-w-[32px] h-8 px-3 font-extrabold shadow-xl flex items-center justify-center border-3 border-white animate-pulse">
+                {unreadCount}
+              </div>
             </div>
           )}
         </button>
@@ -459,7 +465,7 @@ export default function DashboardPage() {
                     </div>
                     <div>
                       <div className="font-bold text-gray-900 text-base mb-1">
-                        {schedule.start_time} - {schedule.end_time}
+                        {schedule.start_time.substring(0, 5)} - {schedule.end_time.substring(0, 5)}
                       </div>
                       <div className="text-sm text-gray-600 flex items-center gap-2">
                         <span className="font-medium">{schedule.subject}</span>
@@ -566,7 +572,7 @@ export default function DashboardPage() {
 
         <button
           onClick={() => router.push('/messages')}
-          className="w-full mt-3 bg-pink-500 hover:bg-pink-600 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
+          className="relative w-full mt-3 bg-pink-400 hover:bg-pink-500 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
         >
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-3 rounded-xl">
@@ -575,8 +581,11 @@ export default function DashboardPage() {
             <span className="font-bold">学習サポートルーム</span>
           </div>
           {unreadCount > 0 && (
-            <div className="bg-white text-pink-600 text-xs rounded-full px-3 py-1.5 font-bold shadow-md">
-              {unreadCount}
+            <div className="relative flex items-center gap-2">
+              <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75"></div>
+              <div className="relative bg-red-500 text-white text-sm rounded-full min-w-[32px] h-8 px-3 font-extrabold shadow-xl flex items-center justify-center border-3 border-white animate-pulse">
+                {unreadCount}
+              </div>
             </div>
           )}
         </button>
