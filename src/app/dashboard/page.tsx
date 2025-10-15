@@ -242,7 +242,7 @@ export default function DashboardPage() {
 
         <button
           onClick={() => router.push('/messages')}
-          className="relative w-full mt-3 bg-pink-400 hover:bg-pink-500 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
+          className="relative w-full mt-3 bg-gradient-to-r from-pink-400 via-pink-400 to-pink-300 hover:from-pink-500 hover:via-pink-500 hover:to-pink-400 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white overflow-hidden"
         >
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-3 rounded-xl">
@@ -251,11 +251,8 @@ export default function DashboardPage() {
             <span className="font-bold">学習サポートルーム</span>
           </div>
           {unreadCount > 0 && (
-            <div className="relative flex items-center gap-2">
-              <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75"></div>
-              <div className="relative bg-red-500 text-white text-sm rounded-full min-w-[32px] h-8 px-3 font-extrabold shadow-xl flex items-center justify-center border-3 border-white animate-pulse">
-                {unreadCount}
-              </div>
+            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
+              {unreadCount}
             </div>
           )}
         </button>
@@ -402,7 +399,7 @@ export default function DashboardPage() {
 
         <button
           onClick={() => router.push('/messages')}
-          className="relative w-full mt-3 bg-pink-400 hover:bg-pink-500 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
+          className="relative w-full mt-3 bg-gradient-to-r from-pink-400 via-pink-400 to-pink-300 hover:from-pink-500 hover:via-pink-500 hover:to-pink-400 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white overflow-hidden"
         >
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-3 rounded-xl">
@@ -411,11 +408,8 @@ export default function DashboardPage() {
             <span className="font-bold">学習サポートルーム</span>
           </div>
           {unreadCount > 0 && (
-            <div className="relative flex items-center gap-2">
-              <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75"></div>
-              <div className="relative bg-red-500 text-white text-sm rounded-full min-w-[32px] h-8 px-3 font-extrabold shadow-xl flex items-center justify-center border-3 border-white animate-pulse">
-                {unreadCount}
-              </div>
+            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
+              {unreadCount}
             </div>
           )}
         </button>
@@ -572,7 +566,7 @@ export default function DashboardPage() {
 
         <button
           onClick={() => router.push('/messages')}
-          className="relative w-full mt-3 bg-pink-400 hover:bg-pink-500 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white"
+          className="relative w-full mt-3 bg-gradient-to-r from-pink-400 via-pink-400 to-pink-300 hover:from-pink-500 hover:via-pink-500 hover:to-pink-400 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white overflow-hidden"
         >
           <div className="flex items-center gap-3">
             <div className="bg-white/20 p-3 rounded-xl">
@@ -581,11 +575,8 @@ export default function DashboardPage() {
             <span className="font-bold">学習サポートルーム</span>
           </div>
           {unreadCount > 0 && (
-            <div className="relative flex items-center gap-2">
-              <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75"></div>
-              <div className="relative bg-red-500 text-white text-sm rounded-full min-w-[32px] h-8 px-3 font-extrabold shadow-xl flex items-center justify-center border-3 border-white animate-pulse">
-                {unreadCount}
-              </div>
+            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
+              {unreadCount}
             </div>
           )}
         </button>
