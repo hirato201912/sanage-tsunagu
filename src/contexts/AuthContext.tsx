@@ -23,14 +23,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // 初期認証状態をチェック
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id)
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+
+        if (session?.user) {
+          await fetchProfile(session.user.id)
+        }
+      } catch (error) {
+        console.error('Error in getInitialSession:', error)
+      } finally {
+        setLoading(false)
       }
-      
-      setLoading(false)
     }
 
     getInitialSession()
@@ -53,10 +57,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-const fetchProfile = async (userId: string, retryCount = 0) => {
+const fetchProfile = async (userId: string, retryCount = 0): Promise<void> => {
   try {
     console.log('Fetching profile for userId:', userId)
-    
+
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -66,12 +70,12 @@ const fetchProfile = async (userId: string, retryCount = 0) => {
     console.log('Profile query result:')
     console.log('Data:', data)
     console.log('Error:', error)
-    
+
     if (error) {
       // JWT期限切れエラーの場合
       if (error.code === 'PGRST301' || error.code === 'PGRST302' || error.code === 'PGRST303') {
         console.log('JWT expired, attempting to refresh session...')
-        
+
         // セッションを再取得してリトライ
         const { data: { session } } = await supabase.auth.getSession()
         if (session && retryCount < 2) {
@@ -84,31 +88,38 @@ const fetchProfile = async (userId: string, retryCount = 0) => {
           return
         }
       }
-      
+
       console.error('Profile fetch error details:', error)
-      
+
       // もしsingleでエラーが出る場合は、全件取得してみる
       const { data: allData } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-      
+
       console.log('All matching profiles:', allData)
-      
+
       if (allData && allData.length > 0) {
         setProfile(allData[0])
-        return
+      } else {
+        console.error('No profile found for user:', userId)
+        setProfile(null)
       }
+      return
     } else {
       setProfile(data)
     }
   } catch (error) {
     console.error('Error fetching profile:', error)
-    
-    // ネットワークエラーなどの場合も再試行
+
+    // ネットワークエラーなどの場合も再試行（最大2回まで）
     if (retryCount < 2) {
       console.log(`Retrying profile fetch... (attempt ${retryCount + 1})`)
-      setTimeout(() => fetchProfile(userId, retryCount + 1), 1000)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      return await fetchProfile(userId, retryCount + 1)
+    } else {
+      console.error('Max retry attempts reached, setting profile to null')
+      setProfile(null)
     }
   }
 }
