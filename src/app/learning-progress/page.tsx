@@ -1,368 +1,613 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-
-// ダミーデータ
-const dummyStudents = [
-  { id: '1', name: '山田太郎', faceToFaceDay: 3 }, // 水曜日
-  { id: '2', name: '佐藤花子', faceToFaceDay: 5 }, // 金曜日
-  { id: '3', name: '鈴木一郎', faceToFaceDay: 2 }, // 火曜日
-]
-
-const dummyData = {
-  review: {
-    // 前回の対面授業で設定した目標（生徒が取り組んだもの）
-    tasks: [
-      { id: '1', subject: '数学', description: '二次関数の問題集 p.20-30', isCompleted: true, notes: '全問正解できた' },
-      { id: '2', subject: '英語', description: '単語帳 Unit 5-7 暗記', isCompleted: true, notes: '' },
-      { id: '3', subject: '物理', description: '力学の復習ノート作成', isCompleted: false, notes: '時間が足りなかった' },
-      { id: '4', subject: '化学', description: '元素記号 1-20 暗記', isCompleted: true, notes: '' },
-    ],
-    reviewComment: '今回もよく頑張りました。物理は時間が足りなかったようなので、次回は計画的に進めましょう。'
-  },
-  plan: {
-    // 次回の対面授業までの目標（これから設定するもの）
-    tasks: [
-      { id: '1', subject: '数学', description: '三角関数の予習', isCompleted: false },
-      { id: '2', subject: '英語', description: '長文読解 3題', isCompleted: false },
-      { id: '3', subject: '物理', description: 'エネルギー保存則の問題演習', isCompleted: false },
-    ],
-    instructorComment: '次回は三角関数に入ります。予習をしっかりしておきましょう。'
-  }
-}
-
-type Tab = 'review' | 'plan'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import type { StudentLessonSetting, LearningTask, Profile } from '@/lib/supabase'
+import {
+  getNextLessonDate,
+  getPreviousLessonDate,
+  getNextNextLessonDate,
+  formatPeriod,
+  getDayName,
+  formatDateToString
+} from '@/lib/dateUtils'
+import {
+  MdCheckCircle,
+  MdCheckCircleOutline,
+  MdAddCircle,
+  MdCalendarToday,
+  MdClose,
+  MdEdit,
+  MdDelete,
+  MdArrowBack
+} from 'react-icons/md'
 
 export default function LearningProgressPage() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
-  const [selectedStudent, setSelectedStudent] = useState('1')
-  const [activeTab, setActiveTab] = useState<Tab>('review')
-  const [reviewComment, setReviewComment] = useState(dummyData.review.reviewComment)
-  const [planComment, setPlanComment] = useState(dummyData.plan.instructorComment)
-  const [planTasks, setPlanTasks] = useState(dummyData.plan.tasks)
+  const searchParams = useSearchParams()
+  const studentId = searchParams?.get('student')
+
+  const [student, setStudent] = useState<Profile | null>(null)
+  const [lessonSetting, setLessonSetting] = useState<StudentLessonSetting | null>(null)
+  const [beforeTasks, setBeforeTasks] = useState<LearningTask[]>([])
+  const [afterTasks, setAfterTasks] = useState<LearningTask[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [showAddTask, setShowAddTask] = useState(false)
+  const [selectedPeriod, setSelectedPeriod] = useState<'before' | 'after'>('after')
+  const [editingTask, setEditingTask] = useState<LearningTask | null>(null)
+
+  const [taskFormData, setTaskFormData] = useState({
+    title: '',
+    description: '',
+    subject: ''
+  })
 
   useEffect(() => {
-    console.log('learning-progress useEffect:', { loading, user: !!user, profile: profile?.role })
-
-    // 一時的に認証チェックをスキップ（UI確認用）
-    // if (!loading && (!user || !profile)) {
-    //   router.push('/login')
-    // } else if (!loading && profile && profile.role === 'student') {
-    //   router.push('/dashboard')
-    // }
+    if (!loading && (!user || !profile)) {
+      router.push('/login')
+    } else if (!loading && profile && profile.role === 'student') {
+      router.push('/dashboard')
+    }
   }, [user, profile, loading, router])
 
-  // 一時的に認証チェックをスキップ（UI確認用）
-  if (false && loading) {
+  useEffect(() => {
+    if (profile && (profile.role === 'admin' || profile.role === 'instructor')) {
+      if (!studentId) {
+        alert('生徒が指定されていません')
+        router.push('/learning-admin')
+        return
+      }
+      fetchData()
+    }
+  }, [profile, studentId, router])
+
+  const fetchData = async () => {
+    if (!studentId) return
+
+    try {
+      setIsLoading(true)
+
+      // 生徒情報を取得
+      const { data: studentData, error: studentError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', studentId)
+        .single()
+
+      if (studentError) throw studentError
+      setStudent(studentData)
+
+      // 曜日設定を取得
+      const { data: setting, error: settingError } = await supabase
+        .from('student_lesson_settings')
+        .select('*')
+        .eq('student_id', studentId)
+        .single()
+
+      if (settingError && settingError.code !== 'PGRST116') throw settingError
+
+      if (!setting) {
+        setLessonSetting(null)
+        setIsLoading(false)
+        return
+      }
+
+      setLessonSetting(setting)
+
+      // 次回の対面授業日を計算
+      const nextLessonDate = getNextLessonDate(setting.day_of_week)
+      const targetDateStr = formatDateToString(nextLessonDate)
+
+      // タスクを取得
+      const { data: tasks, error: tasksError } = await supabase
+        .from('learning_tasks')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('target_lesson_date', targetDateStr)
+        .order('order_index', { ascending: true })
+
+      if (tasksError) throw tasksError
+
+      if (tasks) {
+        setBeforeTasks(tasks.filter(t => t.period === 'before'))
+        setAfterTasks(tasks.filter(t => t.period === 'after'))
+      }
+    } catch (error) {
+      console.error('データ取得エラー:', error)
+      alert('データの取得に失敗しました')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const toggleTaskCompletion = async (task: LearningTask) => {
+    try {
+      const newCompleted = !task.completed
+      const { error } = await supabase
+        .from('learning_tasks')
+        .update({
+          completed: newCompleted,
+          completed_at: newCompleted ? new Date().toISOString() : null,
+          completed_by: newCompleted ? profile?.id : null
+        })
+        .eq('id', task.id)
+
+      if (error) throw error
+
+      await fetchData()
+    } catch (error) {
+      console.error('タスク更新エラー:', error)
+      alert('タスクの更新に失敗しました')
+    }
+  }
+
+  const handleAddTask = async () => {
+    if (!taskFormData.title.trim() || !lessonSetting || !studentId) {
+      alert('タスク名を入力してください')
+      return
+    }
+
+    try {
+      const period = selectedPeriod
+      const existingTasks = period === 'before' ? beforeTasks : afterTasks
+      const maxOrderIndex = existingTasks.length > 0
+        ? Math.max(...existingTasks.map(t => t.order_index))
+        : -1
+
+      const nextLessonDate = getNextLessonDate(lessonSetting.day_of_week)
+      const targetDateStr = formatDateToString(nextLessonDate)
+
+      const { error } = await supabase
+        .from('learning_tasks')
+        .insert([{
+          student_id: studentId,
+          target_lesson_date: targetDateStr,
+          period: period,
+          title: taskFormData.title,
+          description: taskFormData.description || null,
+          subject: taskFormData.subject || null,
+          order_index: maxOrderIndex + 1,
+          completed: false,
+          created_by: profile?.id
+        }])
+
+      if (error) throw error
+
+      setTaskFormData({ title: '', description: '', subject: '' })
+      setShowAddTask(false)
+      await fetchData()
+    } catch (error) {
+      console.error('タスク追加エラー:', error)
+      alert('タスクの追加に失敗しました')
+    }
+  }
+
+  const handleEditTask = async () => {
+    if (!editingTask || !taskFormData.title.trim()) {
+      alert('タスク名を入力してください')
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('learning_tasks')
+        .update({
+          title: taskFormData.title,
+          description: taskFormData.description || null,
+          subject: taskFormData.subject || null
+        })
+        .eq('id', editingTask.id)
+
+      if (error) throw error
+
+      setEditingTask(null)
+      setTaskFormData({ title: '', description: '', subject: '' })
+      await fetchData()
+    } catch (error) {
+      console.error('タスク編集エラー:', error)
+      alert('タスクの編集に失敗しました')
+    }
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!confirm('このタスクを削除しますか？')) return
+
+    try {
+      const { error } = await supabase
+        .from('learning_tasks')
+        .delete()
+        .eq('id', taskId)
+
+      if (error) throw error
+      await fetchData()
+    } catch (error) {
+      console.error('タスク削除エラー:', error)
+      alert('タスクの削除に失敗しました')
+    }
+  }
+
+  const openEditModal = (task: LearningTask) => {
+    setEditingTask(task)
+    setTaskFormData({
+      title: task.title,
+      description: task.description || '',
+      subject: task.subject || ''
+    })
+  }
+
+  const closeEditModal = () => {
+    setEditingTask(null)
+    setTaskFormData({ title: '', description: '', subject: '' })
+  }
+
+  const calculateProgress = (tasks: LearningTask[]) => {
+    if (tasks.length === 0) return 0
+    const completed = tasks.filter(t => t.completed).length
+    return Math.round((completed / tasks.length) * 100)
+  }
+
+  if (loading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center space-y-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8DCCB3]"></div>
-          <span className="text-gray-600">読み込み中...</span>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="text-sm text-blue-600 hover:underline"
-          >
-            ダッシュボードに戻る
-          </button>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-600">読み込み中...</div>
+      </div>
+    )
+  }
+
+  if (!student || !lessonSetting) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <p className="text-gray-600 mb-4">
+              {!student ? '生徒が見つかりません' : '対面授業の曜日が設定されていません'}
+            </p>
+            <button
+              onClick={() => router.push('/learning-admin')}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            >
+              曜日設定画面へ戻る
+            </button>
+          </div>
         </div>
       </div>
     )
   }
 
-  // 一時的に認証チェックをスキップ（UI確認用）
-  // if (!user || !profile) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-  //       <div className="text-center">
-  //         <p className="text-gray-600 mb-4">ログインしてください</p>
-  //         <button
-  //           onClick={() => router.push('/login')}
-  //           className="bg-[#8DCCB3] text-white px-6 py-2 rounded-lg"
-  //         >
-  //           ログインページへ
-  //         </button>
-  //       </div>
-  //     </div>
-  //   )
-  // }
+  const beforeProgress = calculateProgress(beforeTasks)
+  const afterProgress = calculateProgress(afterTasks)
 
-  // if (profile?.role === 'student') {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-  //       <div className="text-center">
-  //         <p className="text-gray-600 mb-4">このページは講師・塾長専用です</p>
-  //         <button
-  //           onClick={() => router.push('/dashboard')}
-  //           className="bg-[#8DCCB3] text-white px-6 py-2 rounded-lg"
-  //         >
-  //           ダッシュボードへ
-  //         </button>
-  //       </div>
-  //     </div>
-  //   )
-  // }
-
-  // 曜日名を取得
-  const getDayName = (day: number) => {
-    const days = ['日', '月', '火', '水', '木', '金', '土']
-    return days[day]
-  }
-
-  // 選択中の生徒情報を取得
-  const currentStudent = dummyStudents.find(s => s.id === selectedStudent)
-
-  // 週の日付範囲を計算（ダミー表示用）
-  const getWeekRangeText = () => {
-    if (!currentStudent) return ''
-    const dayName = getDayName(currentStudent.faceToFaceDay)
-    return `（対面授業: ${dayName}曜日）`
-  }
-
-  const addPlanTask = () => {
-    const newTask = {
-      id: `new-${Date.now()}`,
-      subject: '',
-      description: '',
-      isCompleted: false
-    }
-    setPlanTasks([...planTasks, newTask])
-  }
-
-  const updatePlanTask = (id: string, field: 'subject' | 'description', value: string) => {
-    setPlanTasks(planTasks.map(task =>
-      task.id === id ? { ...task, [field]: value } : task
-    ))
-  }
-
-  const deletePlanTask = (id: string) => {
-    setPlanTasks(planTasks.filter(task => task.id !== id))
-  }
+  const nextLesson = getNextLessonDate(lessonSetting.day_of_week)
+  const prevLesson = getPreviousLessonDate(lessonSetting.day_of_week)
+  const nextNextLesson = getNextNextLessonDate(lessonSetting.day_of_week)
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ヘッダー */}
-      <header className="bg-[#6BB6A8] shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-5">
-            <div className="flex items-center space-x-3">
-              <div className="bg-white rounded-xl p-2 shadow-md">
-                <img src="/main_icon.png" alt="ツナグ" className="h-9 w-9" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">学習進捗管理</h1>
-              </div>
-            </div>
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="bg-white hover:bg-gray-100 text-[#5FA084] px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              <span>ダッシュボード</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        {/* 生徒選択 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* ヘッダー */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <button
+            onClick={() => router.push('/learning-admin')}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4"
+          >
+            <MdArrowBack />
+            曜日設定画面へ戻る
+          </button>
           <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">生徒を選択</label>
-              <select
-                value={selectedStudent}
-                onChange={(e) => setSelectedStudent(e.target.value)}
-                className="w-full md:w-96 px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] transition-colors text-lg"
-              >
-                {dummyStudents.map(student => (
-                  <option key={student.id} value={student.id}>
-                    {student.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="text-sm text-gray-600 font-medium">
-              {getWeekRangeText()}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                {student.full_name} のタスク管理
+              </h1>
+              <div className="flex items-center text-gray-600">
+                <MdCalendarToday className="mr-2" />
+                <span>対面授業: 毎週{getDayName(lessonSetting.day_of_week)}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* タブナビゲーション */}
-        <div className="bg-white rounded-t-xl shadow-sm border border-gray-200 border-b-0">
-          <div className="flex border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('review')}
-              className={`flex-1 py-4 px-6 text-center font-semibold transition-all ${
-                activeTab === 'review'
-                  ? 'bg-[#8DCCB3] text-white border-b-2 border-[#8DCCB3]'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              前回の振り返り
-            </button>
-            <button
-              onClick={() => setActiveTab('plan')}
-              className={`flex-1 py-4 px-6 text-center font-semibold transition-all ${
-                activeTab === 'plan'
-                  ? 'bg-[#8DCCB3] text-white border-b-2 border-[#8DCCB3]'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              次回までの予定
-            </button>
-          </div>
-        </div>
-
-        {/* タブコンテンツ */}
-        <div className="bg-white rounded-b-xl shadow-sm border border-gray-200 p-6">
-          {/* 振り返りタブ */}
-          {activeTab === 'review' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">前回設定した目標の達成状況</h3>
-
-                {/* タスク達成状況 */}
-                <div className="space-y-3 mb-6">
-                  {dummyData.review.tasks.map(task => (
-                    <div key={task.id} className="bg-white rounded-lg p-4 border-2 border-gray-200">
-                      <div className="flex items-start gap-4">
-                        <div className="mt-1">
-                          {task.isCompleted ? (
-                            <svg className="h-6 w-6 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                          ) : (
-                            <svg className="h-6 w-6 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm0-2a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                              {task.subject}
-                            </span>
-                            <span className={`text-sm font-semibold ${task.isCompleted ? 'text-gray-900' : 'text-gray-500'}`}>
-                              {task.description}
-                            </span>
-                          </div>
-                          {task.notes && (
-                            <p className="text-sm text-gray-600 mt-1 bg-gray-50 p-2 rounded">
-                              メモ: {task.notes}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* レビューコメント */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
-                  講師のレビューコメント
-                </label>
-                <textarea
-                  value={reviewComment}
-                  onChange={(e) => setReviewComment(e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] transition-colors"
-                  placeholder="先週の学習について振り返りコメントを記入してください"
-                />
-                <div className="mt-4 flex justify-end">
-                  <button className="bg-[#8DCCB3] hover:bg-[#5FA084] text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-md">
-                    保存
-                  </button>
-                </div>
-              </div>
+        {/* それまでの1週間（振り返り） */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">それまでの1週間</h2>
+              <p className="text-sm text-gray-600">{formatPeriod(prevLesson, nextLesson)}</p>
             </div>
-          )}
+            <div className="text-right">
+              <div className="text-3xl font-bold text-blue-600">{beforeProgress}%</div>
+              <div className="text-sm text-gray-600">達成率</div>
+            </div>
+          </div>
 
-          {/* 次回までの予定タブ */}
-          {activeTab === 'plan' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 mb-4">次回の対面授業までの学習目標</h3>
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+            <div
+              className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: `${beforeProgress}%` }}
+            />
+          </div>
 
-                {/* タスク作成 */}
-                <div className="space-y-3 mb-6">
-                  {planTasks.map((task, index) => (
-                    <div key={task.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                        <div className="md:col-span-3">
-                          <input
-                            type="text"
-                            value={task.subject}
-                            onChange={(e) => updatePlanTask(task.id, 'subject', e.target.value)}
-                            placeholder="科目"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3]"
-                          />
-                        </div>
-                        <div className="md:col-span-8">
-                          <input
-                            type="text"
-                            value={task.description}
-                            onChange={(e) => updatePlanTask(task.id, 'description', e.target.value)}
-                            placeholder="タスク内容"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3]"
-                          />
-                        </div>
-                        <div className="md:col-span-1 flex items-center justify-center">
-                          <button
-                            onClick={() => deletePlanTask(task.id)}
-                            className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-all"
-                          >
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
+          <div className="space-y-2">
+            {beforeTasks.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">タスクがありません</p>
+            ) : (
+              beforeTasks.map(task => (
+                <div
+                  key={task.id}
+                  className={`flex items-start p-3 rounded-lg border-2 transition-all ${
+                    task.completed
+                      ? 'bg-blue-50 border-blue-200'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  }`}
+                >
                   <button
-                    onClick={addPlanTask}
-                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[#8DCCB3] hover:text-[#8DCCB3] hover:bg-[#8DCCB3]/5 transition-all flex items-center justify-center gap-2"
+                    onClick={() => toggleTaskCompletion(task)}
+                    className="flex-shrink-0 mt-0.5"
                   >
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span className="font-semibold">タスクを追加</span>
+                    {task.completed ? (
+                      <MdCheckCircle className="text-3xl text-blue-600" />
+                    ) : (
+                      <MdCheckCircleOutline className="text-3xl text-gray-400 hover:text-blue-600" />
+                    )}
                   </button>
-                </div>
-
-                {/* 全体コメント */}
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    全体コメント
-                  </label>
-                  <textarea
-                    value={planComment}
-                    onChange={(e) => setPlanComment(e.target.value)}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-[#8DCCB3] focus:border-[#8DCCB3] transition-colors"
-                    placeholder="次回の対面授業までの学習について全体的なアドバイスを記入してください"
-                  />
-                  <div className="mt-4 flex justify-end">
-                    <button className="bg-[#8DCCB3] hover:bg-[#5FA084] text-white px-6 py-2.5 rounded-lg font-semibold transition-all shadow-md">
-                      保存
+                  <div className="ml-3 flex-1">
+                    <div className={`font-medium ${task.completed ? 'text-gray-600 line-through' : 'text-gray-800'}`}>
+                      {task.title}
+                    </div>
+                    {task.subject && (
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                        {task.subject}
+                      </span>
+                    )}
+                    {task.description && (
+                      <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 ml-2">
+                    <button
+                      onClick={() => openEditModal(task)}
+                      className="text-gray-400 hover:text-blue-600"
+                    >
+                      <MdEdit className="text-xl" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="text-gray-400 hover:text-red-600"
+                    >
+                      <MdDelete className="text-xl" />
                     </button>
                   </div>
                 </div>
+              ))
+            )}
+          </div>
+
+          <button
+            onClick={() => {
+              setSelectedPeriod('before')
+              setShowAddTask(true)
+            }}
+            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+          >
+            <MdAddCircle className="text-xl" />
+            タスクを追加
+          </button>
+        </div>
+
+        {/* これからの1週間（予定） */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">これからの1週間</h2>
+              <p className="text-sm text-gray-600">{formatPeriod(nextLesson, nextNextLesson)}</p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-green-600">{afterProgress}%</div>
+              <div className="text-sm text-gray-600">達成率</div>
+            </div>
+          </div>
+
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+            <div
+              className="bg-green-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: `${afterProgress}%` }}
+            />
+          </div>
+
+          <div className="space-y-2">
+            {afterTasks.length === 0 ? (
+              <p className="text-gray-500 text-center py-4">タスクがありません</p>
+            ) : (
+              afterTasks.map(task => (
+                <div
+                  key={task.id}
+                  className={`flex items-start p-3 rounded-lg border-2 transition-all ${
+                    task.completed
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <button
+                    onClick={() => toggleTaskCompletion(task)}
+                    className="flex-shrink-0 mt-0.5"
+                  >
+                    {task.completed ? (
+                      <MdCheckCircle className="text-3xl text-green-600" />
+                    ) : (
+                      <MdCheckCircleOutline className="text-3xl text-gray-400 hover:text-green-600" />
+                    )}
+                  </button>
+                  <div className="ml-3 flex-1">
+                    <div className={`font-medium ${task.completed ? 'text-gray-600 line-through' : 'text-gray-800'}`}>
+                      {task.title}
+                    </div>
+                    {task.subject && (
+                      <span className="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded">
+                        {task.subject}
+                      </span>
+                    )}
+                    {task.description && (
+                      <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 ml-2">
+                    <button
+                      onClick={() => openEditModal(task)}
+                      className="text-gray-400 hover:text-blue-600"
+                    >
+                      <MdEdit className="text-xl" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTask(task.id)}
+                      className="text-gray-400 hover:text-red-600"
+                    >
+                      <MdDelete className="text-xl" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <button
+            onClick={() => {
+              setSelectedPeriod('after')
+              setShowAddTask(true)
+            }}
+            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+          >
+            <MdAddCircle className="text-xl" />
+            タスクを追加
+          </button>
+        </div>
+
+        {/* タスク追加モーダル */}
+        {showAddTask && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800">タスクを追加</h3>
+                <button onClick={() => setShowAddTask(false)}>
+                  <MdClose className="text-2xl text-gray-400 hover:text-gray-600" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">タスク名 *</label>
+                  <input
+                    type="text"
+                    value={taskFormData.title}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="例: 数学の宿題を終わらせる"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">科目（任意）</label>
+                  <input
+                    type="text"
+                    value={taskFormData.subject}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, subject: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="例: 数学"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">詳細（任意）</label>
+                  <textarea
+                    value={taskFormData.description}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="タスクの詳細を入力..."
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleAddTask}
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    追加
+                  </button>
+                  <button
+                    onClick={() => setShowAddTask(false)}
+                    className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    キャンセル
+                  </button>
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      </main>
+          </div>
+        )}
+
+        {/* タスク編集モーダル */}
+        {editingTask && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800">タスクを編集</h3>
+                <button onClick={closeEditModal}>
+                  <MdClose className="text-2xl text-gray-400 hover:text-gray-600" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">タスク名 *</label>
+                  <input
+                    type="text"
+                    value={taskFormData.title}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">科目（任意）</label>
+                  <input
+                    type="text"
+                    value={taskFormData.subject}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, subject: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">詳細（任意）</label>
+                  <textarea
+                    value={taskFormData.description}
+                    onChange={(e) => setTaskFormData({ ...taskFormData, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleEditTask}
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    保存
+                  </button>
+                  <button
+                    onClick={closeEditModal}
+                    className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

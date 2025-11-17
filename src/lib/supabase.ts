@@ -64,13 +64,30 @@ export type RecurringSchedule = {
   created_at: string
 }
 
-export type StudySession = {
+// 生徒の対面授業曜日設定
+export type StudentLessonSetting = {
   id: string
   student_id: string
-  subject: string
-  study_date: string
-  duration_minutes: number
-  notes?: string
+  day_of_week: number // 0=日曜, 1=月曜, ..., 6=土曜
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+// 学習タスク管理
+export type LearningTask = {
+  id: string
+  student_id: string
+  target_lesson_date: string // 対象の対面授業日（YYYY-MM-DD）
+  period: 'before' | 'after' // before: それまでの1週間, after: これからの1週間
+  title: string
+  description?: string
+  subject?: string
+  order_index: number
+  completed: boolean
+  completed_at?: string
+  completed_by?: string
+  created_by: string
   created_at: string
   updated_at: string
 }
