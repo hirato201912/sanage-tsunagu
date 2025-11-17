@@ -164,12 +164,12 @@ export default function LearningAdminPage() {
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto">
         {/* ヘッダー */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 border-l-4 border-[#8DCCB3]">
           <button
             onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4"
+            className="inline-flex items-center gap-2 px-4 py-2.5 mb-6 text-sm font-medium text-gray-700 bg-white rounded-xl hover:bg-gray-50 transition-all duration-200 shadow-sm hover:shadow-md border border-gray-200 group"
           >
-            <MdArrowBack />
+            <MdArrowBack className="text-lg transition-transform group-hover:-translate-x-1 duration-200" />
             ダッシュボードへ戻る
           </button>
           <div className="flex items-center justify-between">
@@ -201,12 +201,12 @@ export default function LearningAdminPage() {
 
                 {setting ? (
                   <div className="space-y-3">
-                    <div className="bg-blue-50 rounded-lg p-3 border-2 border-blue-200">
+                    <div className="bg-[#8DCCB3]/10 rounded-xl p-3 border-2 border-[#8DCCB3]/30">
                       <div className="flex items-center gap-2 mb-2">
-                        <MdCalendarToday className="text-blue-600" />
-                        <span className="font-semibold text-blue-900">対面授業</span>
+                        <MdCalendarToday className="text-[#6BB6A8]" />
+                        <span className="font-semibold text-[#5FA084]">対面授業</span>
                       </div>
-                      <div className="text-2xl font-bold text-blue-600 mb-1">
+                      <div className="text-2xl font-bold text-[#6BB6A8] mb-1">
                         {getDayName(setting.day_of_week)}
                       </div>
                       <div className="text-sm text-gray-600">
@@ -217,22 +217,22 @@ export default function LearningAdminPage() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => goToTaskManagement(student.id)}
-                        className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm flex items-center justify-center gap-1"
+                        className="flex-1 px-3 py-2.5 bg-[#6BB6A8] text-white rounded-xl hover:bg-[#5FA084] transition-all duration-200 text-sm font-medium flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md"
                       >
-                        <MdAssignment />
+                        <MdAssignment className="text-lg" />
                         タスク管理
                       </button>
                       <button
                         onClick={() => openModal(student)}
-                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                        className="px-3 py-2.5 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 border border-gray-200"
                       >
-                        <MdEdit />
+                        <MdEdit className="text-lg" />
                       </button>
                       <button
                         onClick={() => handleDeleteSetting(student.id)}
-                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-red-100 hover:text-red-600 transition"
+                        className="px-3 py-2.5 bg-white text-gray-700 rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-200 border border-gray-200 hover:border-red-200"
                       >
-                        <MdDelete />
+                        <MdDelete className="text-lg" />
                       </button>
                     </div>
                   </div>
@@ -242,9 +242,9 @@ export default function LearningAdminPage() {
                       <p className="text-gray-500 text-sm mb-3">曜日が設定されていません</p>
                       <button
                         onClick={() => openModal(student)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#6BB6A8] text-white rounded-xl hover:bg-[#5FA084] transition-all duration-200 text-sm font-medium shadow-sm hover:shadow-md"
                       >
-                        <MdAddCircle />
+                        <MdAddCircle className="text-lg" />
                         曜日を設定
                       </button>
                     </div>
@@ -293,9 +293,9 @@ export default function LearningAdminPage() {
                   </div>
                 </div>
 
-                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <div className="bg-[#8DCCB3]/10 rounded-xl p-4 border border-[#8DCCB3]/30">
                   <p className="text-sm text-gray-700 mb-1">設定後の次回対面授業</p>
-                  <p className="text-lg font-bold text-blue-600">
+                  <p className="text-lg font-bold text-[#6BB6A8]">
                     {formatDateToJapanese(getNextLessonDate(selectedDayOfWeek))}
                   </p>
                 </div>
@@ -303,13 +303,13 @@ export default function LearningAdminPage() {
                 <div className="flex gap-3">
                   <button
                     onClick={handleSaveSetting}
-                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                    className="flex-1 bg-[#6BB6A8] text-white px-4 py-3 rounded-xl hover:bg-[#5FA084] transition-all duration-200 font-medium shadow-md hover:shadow-lg"
                   >
                     保存
                   </button>
                   <button
                     onClick={closeModal}
-                    className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition"
+                    className="flex-1 bg-white text-gray-700 px-4 py-3 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium border border-gray-300"
                   >
                     キャンセル
                   </button>
