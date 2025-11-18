@@ -21,8 +21,24 @@ import {
   MdClose,
   MdEdit,
   MdDelete,
-  MdArrowBack
+  MdArrowBack,
+  MdHistory,
+  MdExpandMore,
+  MdExpandLess
 } from 'react-icons/md'
+
+interface HistoricalPeriod {
+  id: string
+  targetDate: Date
+  targetDateStr: string
+  prevLesson: Date
+  nextLesson: Date
+  nextNextLesson: Date
+  beforeTasks: LearningTask[]
+  afterTasks: LearningTask[]
+  beforeProgress: number
+  afterProgress: number
+}
 
 export default function LearningTasksPage() {
   const { user, profile, loading } = useAuth()
@@ -34,6 +50,12 @@ export default function LearningTasksPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showAddTask, setShowAddTask] = useState(false)
   const [selectedPeriod, setSelectedPeriod] = useState<'before' | 'after'>('after')
+
+  // 履歴閲覧用
+  const [showHistory, setShowHistory] = useState(false)
+  const [historicalData, setHistoricalData] = useState<HistoricalPeriod[]>([])
+  const [expandedPeriodId, setExpandedPeriodId] = useState<string | null>(null)
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
 
   // タスク追加/編集フォーム
   const [taskFormData, setTaskFormData] = useState({
@@ -232,6 +254,69 @@ export default function LearningTasksPage() {
     return Math.round((completed / tasks.length) * 100)
   }
 
+  const fetchHistoricalData = async () => {
+    if (!lessonSetting || !profile) return
+
+    try {
+      setIsLoadingHistory(true)
+      const periods: HistoricalPeriod[] = []
+
+      // 過去8週分の対面授業日を計算
+      for (let i = 1; i <= 8; i++) {
+        const weeksAgo = new Date()
+        weeksAgo.setDate(weeksAgo.getDate() - (i * 7))
+
+        const targetDate = getNextLessonDate(lessonSetting.day_of_week, weeksAgo)
+        const targetDateStr = formatDateToString(targetDate)
+
+        // この日付のタスクを取得
+        const { data: tasks, error } = await supabase
+          .from('learning_tasks')
+          .select('*')
+          .eq('student_id', profile.id)
+          .eq('target_lesson_date', targetDateStr)
+          .order('order_index', { ascending: true })
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('履歴データ取得エラー:', error)
+          continue
+        }
+
+        const beforeTasksForPeriod = tasks?.filter(t => t.period === 'before') || []
+        const afterTasksForPeriod = tasks?.filter(t => t.period === 'after') || []
+
+        // 前回と次回の授業日を計算
+        const prevLesson = getPreviousLessonDate(lessonSetting.day_of_week, targetDate)
+        const nextNextLesson = getNextNextLessonDate(lessonSetting.day_of_week, targetDate)
+
+        periods.push({
+          id: targetDateStr,
+          targetDate,
+          targetDateStr,
+          prevLesson,
+          nextLesson: targetDate,
+          nextNextLesson,
+          beforeTasks: beforeTasksForPeriod,
+          afterTasks: afterTasksForPeriod,
+          beforeProgress: calculateProgress(beforeTasksForPeriod),
+          afterProgress: calculateProgress(afterTasksForPeriod)
+        })
+      }
+
+      setHistoricalData(periods)
+      setShowHistory(true)
+    } catch (error) {
+      console.error('履歴データ取得エラー:', error)
+      alert('履歴データの取得に失敗しました')
+    } finally {
+      setIsLoadingHistory(false)
+    }
+  }
+
+  const togglePeriodExpansion = (periodId: string) => {
+    setExpandedPeriodId(expandedPeriodId === periodId ? null : periodId)
+  }
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -285,7 +370,7 @@ export default function LearningTasksPage() {
             <MdArrowBack className="text-lg transition-transform group-hover:-translate-x-1 duration-200" />
             ダッシュボードへ戻る
           </button>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">学習タスク</h1>
               <div className="flex items-center text-gray-600">
@@ -294,27 +379,43 @@ export default function LearningTasksPage() {
               </div>
             </div>
           </div>
+          <button
+            onClick={fetchHistoricalData}
+            disabled={isLoadingHistory}
+            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-[#6BB6A8] rounded-xl hover:bg-[#5FA084] transition-all duration-200 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <MdHistory className="text-lg" />
+            {isLoadingHistory ? '読み込み中...' : '📅 過去の記録を見る'}
+          </button>
         </div>
 
-        {/* それまでの1週間（振り返り） */}
+        {/* これまでの1週間（振り返り） */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 border-l-4 border-[#6BB6A8]">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">それまでの1週間</h2>
-              <p className="text-sm text-gray-600">{formatPeriod(prevLesson, nextLesson)}</p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-[#6BB6A8]">{beforeProgress}%</div>
-              <div className="text-sm text-gray-600">達成率</div>
-            </div>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-800">これまでの1週間</h2>
+            <p className="text-sm text-gray-600">{formatPeriod(prevLesson, nextLesson)}</p>
           </div>
 
           {/* 進捗バー */}
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+          <div className="relative w-full h-6 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full shadow-inner overflow-hidden mb-4">
             <div
-              className="bg-[#6BB6A8] h-3 rounded-full transition-all duration-500"
+              className={`h-6 rounded-full transition-all duration-500 relative ${
+                beforeProgress === 100
+                  ? 'bg-gradient-to-r from-[#6BB6A8] via-[#8DCCB3] to-[#6BB6A8] animate-pulse'
+                  : 'bg-gradient-to-r from-[#6BB6A8] to-[#8DCCB3]'
+              } shadow-lg`}
               style={{ width: `${beforeProgress}%` }}
-            />
+            >
+              {/* シャイン効果 */}
+              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent rounded-full" />
+
+              {/* パーセンテージ表示 */}
+              {beforeProgress > 10 && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-white drop-shadow-md">
+                  {beforeProgress}%
+                </span>
+              )}
+            </div>
           </div>
 
           {/* タスクリスト */}
@@ -327,35 +428,49 @@ export default function LearningTasksPage() {
               beforeTasks.map(task => (
                 <div
                   key={task.id}
-                  className={`group relative rounded-xl border-2 transition-all duration-200 ${
+                  className={`group relative rounded-xl border-2 transition-all duration-300 ${
                     task.completed
-                      ? 'bg-[#8DCCB3]/10 border-[#8DCCB3]/30'
+                      ? 'bg-gradient-to-br from-[#8DCCB3]/20 to-[#B8E0D0]/30 border-[#8DCCB3]/50 shadow-lg'
                       : 'bg-white border-gray-200 hover:border-[#6BB6A8]/40 hover:shadow-md'
                   }`}
                 >
+                  {task.completed && (
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#6BB6A8] to-[#8DCCB3] text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1 animate-bounce">
+                      ✨ 達成！
+                    </div>
+                  )}
                   <div className="p-4">
                     <div className="flex items-start gap-3">
                       <button
                         onClick={() => toggleTaskCompletion(task)}
-                        className="flex-shrink-0 mt-0.5"
+                        className="flex-shrink-0 mt-0.5 relative"
                       >
                         {task.completed ? (
-                          <MdCheckCircle className="text-3xl text-[#6BB6A8]" />
+                          <div className="relative">
+                            <MdCheckCircle className="text-3xl text-[#6BB6A8] animate-pulse" />
+                            <div className="absolute inset-0 animate-ping">
+                              <MdCheckCircle className="text-3xl text-[#6BB6A8] opacity-75" />
+                            </div>
+                          </div>
                         ) : (
                           <MdCheckCircleOutline className="text-3xl text-gray-400 hover:text-[#6BB6A8] transition-colors" />
                         )}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <div className={`font-medium text-base mb-2 ${task.completed ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
+                        <div className={`font-medium text-base mb-2 ${task.completed ? 'text-[#5FA084]' : 'text-gray-800'}`}>
                           {task.title}
                         </div>
                         {task.subject && (
-                          <span className="inline-block px-2.5 py-1 bg-[#6BB6A8]/10 text-[#5FA084] text-xs font-medium rounded-lg border border-[#6BB6A8]/20">
+                          <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-lg border ${
+                            task.completed
+                              ? 'bg-[#6BB6A8]/20 text-[#5FA084] border-[#6BB6A8]/40'
+                              : 'bg-[#6BB6A8]/10 text-[#5FA084] border-[#6BB6A8]/20'
+                          }`}>
                             {task.subject}
                           </span>
                         )}
                         {task.description && (
-                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{task.description}</p>
+                          <p className={`text-sm mt-2 line-clamp-2 ${task.completed ? 'text-gray-600' : 'text-gray-600'}`}>{task.description}</p>
                         )}
                       </div>
                     </div>
@@ -396,23 +511,31 @@ export default function LearningTasksPage() {
 
         {/* これからの1週間（予定） */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 border-l-4 border-[#8DCCB3]">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">これからの1週間</h2>
-              <p className="text-sm text-gray-600">{formatPeriod(nextLesson, nextNextLesson)}</p>
-            </div>
-            <div className="text-right">
-              <div className="text-3xl font-bold text-[#8DCCB3]">{afterProgress}%</div>
-              <div className="text-sm text-gray-600">達成率</div>
-            </div>
+          <div className="mb-4">
+            <h2 className="text-xl font-bold text-gray-800">これからの1週間</h2>
+            <p className="text-sm text-gray-600">{formatPeriod(nextLesson, nextNextLesson)}</p>
           </div>
 
           {/* 進捗バー */}
-          <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+          <div className="relative w-full h-6 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full shadow-inner overflow-hidden mb-4">
             <div
-              className="bg-[#8DCCB3] h-3 rounded-full transition-all duration-500"
+              className={`h-6 rounded-full transition-all duration-500 relative ${
+                afterProgress === 100
+                  ? 'bg-gradient-to-r from-[#8DCCB3] via-[#B8E0D0] to-[#8DCCB3] animate-pulse'
+                  : 'bg-gradient-to-r from-[#8DCCB3] to-[#B8E0D0]'
+              } shadow-lg`}
               style={{ width: `${afterProgress}%` }}
-            />
+            >
+              {/* シャイン効果 */}
+              <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent rounded-full" />
+
+              {/* パーセンテージ表示 */}
+              {afterProgress > 10 && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-white drop-shadow-md">
+                  {afterProgress}%
+                </span>
+              )}
+            </div>
           </div>
 
           {/* タスクリスト */}
@@ -425,35 +548,49 @@ export default function LearningTasksPage() {
               afterTasks.map(task => (
                 <div
                   key={task.id}
-                  className={`group relative rounded-xl border-2 transition-all duration-200 ${
+                  className={`group relative rounded-xl border-2 transition-all duration-300 ${
                     task.completed
-                      ? 'bg-[#B8E0D0]/30 border-[#8DCCB3]/30'
+                      ? 'bg-gradient-to-br from-[#B8E0D0]/40 to-[#8DCCB3]/20 border-[#8DCCB3]/50 shadow-lg'
                       : 'bg-white border-gray-200 hover:border-[#8DCCB3]/40 hover:shadow-md'
                   }`}
                 >
+                  {task.completed && (
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-[#8DCCB3] to-[#B8E0D0] text-white text-xs font-bold px-3 py-1 rounded-full shadow-md flex items-center gap-1 animate-bounce">
+                      ✨ 達成！
+                    </div>
+                  )}
                   <div className="p-4">
                     <div className="flex items-start gap-3">
                       <button
                         onClick={() => toggleTaskCompletion(task)}
-                        className="flex-shrink-0 mt-0.5"
+                        className="flex-shrink-0 mt-0.5 relative"
                       >
                         {task.completed ? (
-                          <MdCheckCircle className="text-3xl text-[#8DCCB3]" />
+                          <div className="relative">
+                            <MdCheckCircle className="text-3xl text-[#8DCCB3] animate-pulse" />
+                            <div className="absolute inset-0 animate-ping">
+                              <MdCheckCircle className="text-3xl text-[#8DCCB3] opacity-75" />
+                            </div>
+                          </div>
                         ) : (
                           <MdCheckCircleOutline className="text-3xl text-gray-400 hover:text-[#8DCCB3] transition-colors" />
                         )}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <div className={`font-medium text-base mb-2 ${task.completed ? 'text-gray-500 line-through' : 'text-gray-800'}`}>
+                        <div className={`font-medium text-base mb-2 ${task.completed ? 'text-[#5FA084]' : 'text-gray-800'}`}>
                           {task.title}
                         </div>
                         {task.subject && (
-                          <span className="inline-block px-2.5 py-1 bg-[#8DCCB3]/10 text-[#5FA084] text-xs font-medium rounded-lg border border-[#8DCCB3]/20">
+                          <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-lg border ${
+                            task.completed
+                              ? 'bg-[#8DCCB3]/20 text-[#5FA084] border-[#8DCCB3]/40'
+                              : 'bg-[#8DCCB3]/10 text-[#5FA084] border-[#8DCCB3]/20'
+                          }`}>
                             {task.subject}
                           </span>
                         )}
                         {task.description && (
-                          <p className="text-sm text-gray-600 mt-2 line-clamp-2">{task.description}</p>
+                          <p className={`text-sm mt-2 line-clamp-2 ${task.completed ? 'text-gray-600' : 'text-gray-600'}`}>{task.description}</p>
                         )}
                       </div>
                     </div>
@@ -699,6 +836,182 @@ export default function LearningTasksPage() {
                     キャンセル
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 過去の記録モーダル */}
+        {showHistory && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden flex flex-col">
+              {/* モーダルヘッダー */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-[#6BB6A8] to-[#8DCCB3]">
+                <div className="flex items-center gap-3">
+                  <MdHistory className="text-3xl text-white" />
+                  <h3 className="text-2xl font-bold text-white">過去の学習記録</h3>
+                </div>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+                >
+                  <MdClose className="text-2xl" />
+                </button>
+              </div>
+
+              {/* モーダルコンテンツ */}
+              <div className="overflow-y-auto p-6 flex-1">
+                {historicalData.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MdCalendarToday className="mx-auto text-6xl text-gray-300 mb-4" />
+                    <p className="text-gray-600">過去の記録がありません</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {historicalData.map((period) => (
+                      <div
+                        key={period.id}
+                        className="bg-white rounded-xl border-2 border-gray-200 hover:border-[#6BB6A8]/40 transition-all duration-200 overflow-hidden"
+                      >
+                        {/* 期間サマリー */}
+                        <button
+                          onClick={() => togglePeriodExpansion(period.id)}
+                          className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="flex-1 text-left">
+                            <div className="flex items-center gap-3 mb-2">
+                              <MdCalendarToday className="text-[#6BB6A8] text-xl" />
+                              <span className="font-bold text-gray-800">
+                                {formatPeriod(period.prevLesson, period.nextNextLesson)}
+                              </span>
+                            </div>
+
+                            {/* ミニ進捗バー */}
+                            <div className="flex gap-4">
+                              <div className="flex-1">
+                                <div className="text-xs text-gray-600 mb-1">これまでの1週間</div>
+                                <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-3 rounded-full bg-gradient-to-r from-[#6BB6A8] to-[#8DCCB3] transition-all duration-300"
+                                    style={{ width: `${period.beforeProgress}%` }}
+                                  />
+                                  {period.beforeProgress > 0 && (
+                                    <span className="absolute inset-0 flex items-center justify-end pr-2 text-[10px] font-bold text-white drop-shadow">
+                                      {period.beforeProgress}%
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <div className="text-xs text-gray-600 mb-1">これからの1週間</div>
+                                <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-3 rounded-full bg-gradient-to-r from-[#8DCCB3] to-[#B8E0D0] transition-all duration-300"
+                                    style={{ width: `${period.afterProgress}%` }}
+                                  />
+                                  {period.afterProgress > 0 && (
+                                    <span className="absolute inset-0 flex items-center justify-end pr-2 text-[10px] font-bold text-white drop-shadow">
+                                      {period.afterProgress}%
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="ml-4">
+                            {expandedPeriodId === period.id ? (
+                              <MdExpandLess className="text-2xl text-gray-400" />
+                            ) : (
+                              <MdExpandMore className="text-2xl text-gray-400" />
+                            )}
+                          </div>
+                        </button>
+
+                        {/* 展開コンテンツ */}
+                        {expandedPeriodId === period.id && (
+                          <div className="border-t border-gray-200 bg-gray-50 p-4">
+                            {/* これまでの1週間のタスク */}
+                            <div className="mb-6">
+                              <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                <span className="w-1 h-5 bg-[#6BB6A8] rounded"></span>
+                                これまでの1週間
+                              </h4>
+                              {period.beforeTasks.length === 0 ? (
+                                <p className="text-sm text-gray-500 pl-3">タスクがありません</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {period.beforeTasks.map((task) => (
+                                    <div
+                                      key={task.id}
+                                      className={`flex items-start gap-3 p-3 rounded-lg ${
+                                        task.completed ? 'bg-[#8DCCB3]/10' : 'bg-white'
+                                      }`}
+                                    >
+                                      {task.completed ? (
+                                        <MdCheckCircle className="text-xl text-[#6BB6A8] flex-shrink-0 mt-0.5" />
+                                      ) : (
+                                        <MdCheckCircleOutline className="text-xl text-gray-400 flex-shrink-0 mt-0.5" />
+                                      )}
+                                      <div className="flex-1 min-w-0">
+                                        <div className={`text-sm font-medium ${task.completed ? 'text-[#5FA084]' : 'text-gray-800'}`}>
+                                          {task.title}
+                                        </div>
+                                        {task.subject && (
+                                          <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-md bg-[#6BB6A8]/20 text-[#5FA084]">
+                                            {task.subject}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* これからの1週間のタスク */}
+                            <div>
+                              <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                <span className="w-1 h-5 bg-[#8DCCB3] rounded"></span>
+                                これからの1週間
+                              </h4>
+                              {period.afterTasks.length === 0 ? (
+                                <p className="text-sm text-gray-500 pl-3">タスクがありません</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {period.afterTasks.map((task) => (
+                                    <div
+                                      key={task.id}
+                                      className={`flex items-start gap-3 p-3 rounded-lg ${
+                                        task.completed ? 'bg-[#B8E0D0]/20' : 'bg-white'
+                                      }`}
+                                    >
+                                      {task.completed ? (
+                                        <MdCheckCircle className="text-xl text-[#8DCCB3] flex-shrink-0 mt-0.5" />
+                                      ) : (
+                                        <MdCheckCircleOutline className="text-xl text-gray-400 flex-shrink-0 mt-0.5" />
+                                      )}
+                                      <div className="flex-1 min-w-0">
+                                        <div className={`text-sm font-medium ${task.completed ? 'text-[#5FA084]' : 'text-gray-800'}`}>
+                                          {task.title}
+                                        </div>
+                                        {task.subject && (
+                                          <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded-md bg-[#8DCCB3]/20 text-[#5FA084]">
+                                            {task.subject}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
