@@ -253,7 +253,8 @@ export default function MyTestScoresPage() {
       fetchMyScores()
     } catch (error) {
       console.error('Error saving test scores:', error)
-      alert(`成績の保存に失敗しました: ${error.message || '不明なエラー'}`)
+      const errorMessage = error instanceof Error ? error.message : '不明なエラー'
+      alert(`成績の保存に失敗しました: ${errorMessage}`)
     }
   }
 
