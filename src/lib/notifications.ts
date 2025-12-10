@@ -52,7 +52,7 @@ export class NotificationService {
     body: string
     icon?: string
     tag?: string
-    data?: any
+    data?: Record<string, unknown>
     onClick?: () => void
   }): Promise<void> {
     if (this.permission !== 'granted') {

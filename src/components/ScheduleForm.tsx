@@ -37,6 +37,7 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
         setFormData(prev => ({ ...prev, lesson_date: today }))
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialDate])
 
   useEffect(() => {
@@ -54,6 +55,11 @@ export default function ScheduleForm({ isOpen, onClose, onSuccess, initialDate }
       .select('*')
       .eq('role', 'student')
       .order('full_name')
+
+    if (studentsError) {
+      console.error('Error fetching students:', studentsError)
+      return
+    }
 
     setStudents(studentsData || [])
   } catch (error) {

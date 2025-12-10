@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
 
@@ -35,7 +35,6 @@ interface ScoreComparison {
 }
 
 export default function TestScoreHeatmap() {
-  const [students, setStudents] = useState<Profile[]>([])
   const [testScores, setTestScores] = useState<TestScoreWithProfile[]>([])
   const [comparisons, setComparisons] = useState<ScoreComparison[]>([])
   const [selectedSubject, setSelectedSubject] = useState<string>('all')
@@ -50,7 +49,7 @@ export default function TestScoreHeatmap() {
     if (testScores.length > 0) {
       calculateComparisons()
     }
-  }, [testScores, selectedSubject])
+  }, [testScores, selectedSubject, calculateComparisons])
 
   const fetchData = async () => {
     try {
@@ -74,7 +73,6 @@ export default function TestScoreHeatmap() {
 
       if (scoresError) throw scoresError
 
-      setStudents(studentsData || [])
       setTestScores(scoresData || [])
 
       // 科目一覧を取得
@@ -88,9 +86,9 @@ export default function TestScoreHeatmap() {
     }
   }
 
-  const calculateComparisons = () => {
-    const filteredScores = selectedSubject === 'all' 
-      ? testScores 
+  const calculateComparisons = useCallback(() => {
+    const filteredScores = selectedSubject === 'all'
+      ? testScores
       : testScores.filter(score => score.subject === selectedSubject)
 
     const studentSubjectMap: { [key: string]: TestScore[] } = {}
@@ -106,7 +104,7 @@ export default function TestScoreHeatmap() {
 
     const comparisonResults: ScoreComparison[] = []
 
-    Object.entries(studentSubjectMap).forEach(([key, scores]) => {
+    Object.entries(studentSubjectMap).forEach(([, scores]) => {
       if (scores.length >= 1) {
         // 日付順にソート
         const sortedScores = scores.sort((a, b) => new Date(a.test_date).getTime() - new Date(b.test_date).getTime())
@@ -115,7 +113,7 @@ export default function TestScoreHeatmap() {
 
         const currentPercentage = Math.round(latest.score)
         const previousPercentage = previous ? Math.round(previous.score) : null
-        
+
         comparisonResults.push({
           student_id: latest.student_id,
           student_name: latest.student.full_name,
@@ -131,7 +129,7 @@ export default function TestScoreHeatmap() {
     })
 
     setComparisons(comparisonResults.sort((a, b) => a.student_name.localeCompare(b.student_name)))
-  }
+  }, [testScores, selectedSubject])
 
   const getHeatmapColor = (difference: number | null): string => {
     if (difference === null) return 'bg-gray-100 text-gray-700'

@@ -44,6 +44,7 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
       const today = new Date().toISOString().split('T')[0]
       setFormData(prev => ({ ...prev, start_date: today }))
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -60,6 +61,11 @@ export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: Re
         .select('*')
         .eq('role', 'student')
         .order('full_name')
+
+      if (studentsError) {
+        console.error('Error fetching students:', studentsError)
+        return
+      }
 
       setStudents(studentsData || [])
     } catch (error) {

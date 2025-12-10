@@ -1,7 +1,7 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { User, AuthResponse } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
 
@@ -9,7 +9,7 @@ type AuthContextType = {
   user: User | null
   profile: Profile | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<any>
+  signIn: (email: string, password: string) => Promise<AuthResponse>
   signOut: () => Promise<void>
 }
 
@@ -55,9 +55,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-const fetchProfile = async (userId: string, retryCount = 0): Promise<void> => {
+const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise<void> => {
   try {
     console.log('Fetching profile for userId:', userId)
 
@@ -122,7 +123,7 @@ const fetchProfile = async (userId: string, retryCount = 0): Promise<void> => {
       setProfile(null)
     }
   }
-}
+}, [])
 
   const signIn = async (email: string, password: string) => {
     return await supabase.auth.signInWithPassword({ email, password })
