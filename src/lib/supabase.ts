@@ -17,6 +17,8 @@ export type Profile = {
   full_name: string
   role: 'student' | 'instructor' | 'admin'
   classroom_id?: string
+  grade?: '高1' | '高2' | '高3'  // 学年（生徒のみ）
+  school_name?: string  // 高校名（生徒のみ）
   created_at: string
 }
 

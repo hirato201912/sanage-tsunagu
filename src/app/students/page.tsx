@@ -21,7 +21,9 @@ export default function StudentsPage() {
     password: '',
     fullName: '',
     classroomId: '',
-    instructorId: ''
+    instructorId: '',
+    grade: '' as '' | '高1' | '高2' | '高3',
+    schoolName: ''
   })
 
   useEffect(() => {
@@ -76,7 +78,9 @@ export default function StudentsPage() {
           .from('profiles')
           .update({
             full_name: formData.fullName,
-            classroom_id: formData.classroomId || null
+            classroom_id: formData.classroomId || null,
+            grade: formData.grade || null,
+            school_name: formData.schoolName || null
           })
           .eq('id', editingStudent.id)
 
@@ -97,7 +101,9 @@ export default function StudentsPage() {
               user_id: authData.user.id,
               full_name: formData.fullName,
               role: 'student',
-              classroom_id: formData.classroomId || null
+              classroom_id: formData.classroomId || null,
+              grade: formData.grade || null,
+              school_name: formData.schoolName || null
             })
 
           if (profileError) throw profileError
@@ -105,7 +111,7 @@ export default function StudentsPage() {
       }
 
       // フォームをリセット
-      setFormData({ email: '', password: '', fullName: '', classroomId: '', instructorId: '' })
+      setFormData({ email: '', password: '', fullName: '', classroomId: '', instructorId: '', grade: '', schoolName: '' })
       setShowAddForm(false)
       setEditingStudent(null)
       await fetchData()
@@ -124,7 +130,9 @@ export default function StudentsPage() {
       password: '',
       fullName: student.full_name,
       classroomId: student.classroom_id || '',
-      instructorId: ''
+      instructorId: '',
+      grade: student.grade || '',
+      schoolName: student.school_name || ''
     })
     setShowAddForm(true)
   }
@@ -149,7 +157,7 @@ export default function StudentsPage() {
   }
 
   const resetForm = () => {
-    setFormData({ email: '', password: '', fullName: '', classroomId: '', instructorId: '' })
+    setFormData({ email: '', password: '', fullName: '', classroomId: '', instructorId: '', grade: '', schoolName: '' })
     setShowAddForm(false)
     setEditingStudent(null)
   }
@@ -273,6 +281,33 @@ export default function StudentsPage() {
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    学年（任意）
+                  </label>
+                  <select
+                    value={formData.grade}
+                    onChange={(e) => setFormData({ ...formData, grade: e.target.value as '' | '高1' | '高2' | '高3' })}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                  >
+                    <option value="">選択してください</option>
+                    <option value="高1">高1</option>
+                    <option value="高2">高2</option>
+                    <option value="高3">高3</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    高校名（任意）
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.schoolName}
+                    onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500"
+                    placeholder="例: 〇〇高等学校"
+                  />
+                </div>
                 <div className="flex space-x-3">
                   <button
                     type="submit"
@@ -310,6 +345,12 @@ export default function StudentsPage() {
                           名前
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          学年
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          高校名
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           所属教室ID
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -338,6 +379,16 @@ export default function StudentsPage() {
                                 </div>
                                 <div className="text-sm text-gray-500">生徒</div>
                               </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {student.grade || '-'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">
+                              {student.school_name || '-'}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
