@@ -23,7 +23,7 @@ export async function generateSchedulesFromRecurring(
     : periodEnd
 
   // 開始日から最初の該当曜日を見つける
-  let currentDate = new Date(startDate)
+  const currentDate = new Date(startDate)
   const targetDayOfWeek = recurringSchedule.day_of_week
   
   // 最初の該当曜日まで進める

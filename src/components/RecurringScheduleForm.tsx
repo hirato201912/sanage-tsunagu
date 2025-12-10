@@ -22,7 +22,6 @@ const DAYS_OF_WEEK = [
 ]
 
 export default function RecurringScheduleForm({ isOpen, onClose, onSuccess }: RecurringScheduleFormProps) {
-  const { profile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [students, setStudents] = useState<Profile[]>([])
 

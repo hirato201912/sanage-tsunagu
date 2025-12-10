@@ -55,7 +55,7 @@ export default function TestScoreHeatmap() {
     try {
       setIsLoading(true)
       
-      const { data: studentsData, error: studentsError } = await supabase
+      const { error: studentsError } = await supabase
         .from('profiles')
         .select('*')
         .eq('role', 'student')
