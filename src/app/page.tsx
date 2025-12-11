@@ -13,20 +13,37 @@ export default function Home() {
     // すでにリダイレクト済みなら何もしない
     if (hasRedirected) return
 
+    // 強制リダイレクト: 6秒経っても何も起きない場合はログインページへ
+    const forceRedirectTimer = setTimeout(() => {
+      if (!hasRedirected) {
+        setHasRedirected(true)
+        // router.replace が効かない場合のフォールバック
+        try {
+          router.replace('/login')
+        } catch (error) {
+          window.location.href = '/login'
+        }
+      }
+    }, 6000)
+
     // loadingが完了したらリダイレクト
     if (!loading) {
       setHasRedirected(true)
+      clearTimeout(forceRedirectTimer)
 
       // リダイレクト先を決定
       const targetUrl = user ? '/dashboard' : '/login'
 
       // すぐにリダイレクト
-      const timer = setTimeout(() => {
+      try {
         router.replace(targetUrl)
-      }, 50)
-
-      return () => clearTimeout(timer)
+      } catch (error) {
+        // フォールバック: router が使えない場合は直接遷移
+        window.location.href = targetUrl
+      }
     }
+
+    return () => clearTimeout(forceRedirectTimer)
   }, [user, loading, router, hasRedirected])
 
 
