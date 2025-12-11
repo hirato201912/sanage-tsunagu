@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// 環境変数の取得（ビルド時のフォールバック付き）
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+// 環境変数の取得（前後の空白を削除）
+const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
+const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
 // デバッグ用：環境変数の状態を出力（本番環境でも確認できるように）
 if (typeof window !== 'undefined') {
@@ -13,9 +13,10 @@ if (typeof window !== 'undefined') {
   console.log('Key exists:', !!supabaseAnonKey)
   console.log('Key length:', supabaseAnonKey?.length || 0)
 
-  // URLの一部を表示（セキュリティのため最初の30文字のみ）
+  // 完全なURLを表示（デバッグのため一時的に）
   if (supabaseUrl) {
-    console.log('URL preview:', supabaseUrl.substring(0, 30) + '...')
+    console.log('URL完全版:', supabaseUrl)
+    console.log('URL文字コード:', Array.from(supabaseUrl).map(c => c.charCodeAt(0)))
   }
 
   if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://placeholder.supabase.co') {
