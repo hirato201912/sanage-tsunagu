@@ -60,17 +60,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise<void> => {
   try {
-    console.log('Fetching profile for userId:', userId)
+    console.log('📝 Fetching profile for userId:', userId)
+    console.log('📝 Retry count:', retryCount)
 
-    const { data, error } = await supabase
+    // クエリ開始前のログ
+    console.log('📝 Starting Supabase query...')
+
+    const queryPromise = supabase
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
       .single()
 
-    console.log('Profile query result:')
-    console.log('Data:', data)
-    console.log('Error:', error)
+    // タイムアウトを設定（10秒）
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
+    )
+
+    console.log('📝 Waiting for query result...')
+
+    const { data, error } = await Promise.race([
+      queryPromise,
+      timeoutPromise
+    ]) as any
+
+    console.log('📝 Query completed!')
+    console.log('📝 Profile query result:')
+    console.log('📝 Data:', data)
+    console.log('📝 Error:', error)
 
     if (error) {
       // JWT期限切れエラーの場合
@@ -115,15 +132,23 @@ const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise
       setProfile(data)
     }
   } catch (error) {
-    console.error('Error fetching profile:', error)
+    console.error('❌ Error fetching profile:', error)
+
+    // タイムアウトエラーの場合
+    if (error instanceof Error && error.message.includes('timeout')) {
+      console.error('❌ Query timed out. Possible causes:')
+      console.error('  - Slow network connection')
+      console.error('  - Database overload')
+      console.error('  - RLS policy blocking access')
+    }
 
     // ネットワークエラーなどの場合も再試行（最大2回まで）
     if (retryCount < 2) {
-      console.log(`Retrying profile fetch... (attempt ${retryCount + 1})`)
+      console.log(`🔄 Retrying profile fetch... (attempt ${retryCount + 1})`)
       await new Promise(resolve => setTimeout(resolve, 1000))
       return await fetchProfile(userId, retryCount + 1)
     } else {
-      console.error('Max retry attempts reached, setting profile to null')
+      console.error('❌ Max retry attempts reached, setting profile to null')
       setProfile(null)
     }
   }
