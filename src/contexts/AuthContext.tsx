@@ -28,7 +28,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
 
         if (session?.user) {
-          await fetchProfile(session.user.id)
+          // プロファイル取得を待つが、失敗してもloadingは解除する
+          await fetchProfile(session.user.id).catch(err => {
+            console.error('Profile fetch failed:', err)
+          })
         }
       } catch (error) {
         console.error('Error in getInitialSession:', error)
@@ -37,34 +40,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    getInitialSession()
+    // 最大5秒後には必ずloadingを解除
+    const timeoutId = setTimeout(() => {
+      setLoading(false)
+    }, 5000)
+
+    getInitialSession().finally(() => {
+      clearTimeout(timeoutId)
+    })
 
     // 認証状態の変更を監視
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null)
-        
+
         if (session?.user) {
-          await fetchProfile(session.user.id)
+          await fetchProfile(session.user.id).catch(err => {
+            console.error('Profile fetch failed:', err)
+          })
         } else {
           setProfile(null)
         }
-        
+
         setLoading(false)
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeoutId)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
 const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise<void> => {
   try {
-    const { data, error } = await supabase
+    // 3秒のタイムアウトを設定
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+    )
+
+    const fetchPromise = supabase
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
       .single()
+
+    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]) as any
 
     if (error) {
       // もしsingleでエラーが出る場合は、全件取得してみる
