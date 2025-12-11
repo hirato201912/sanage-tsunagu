@@ -1,15 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 
-// ビルド時のフォールバック値（実行時には実際の環境変数が必要）
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTI4MDAsImV4cCI6MTk2MDc2ODgwMH0.placeholder'
+// 環境変数の取得（ビルド時のフォールバック付き）
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// 環境変数が設定されていない場合は警告
-if (typeof window !== 'undefined' && (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
-  console.warn('⚠️ Supabase環境変数が設定されていません。アプリケーションは正しく動作しません。')
+// 実行時の環境変数チェック
+if (typeof window !== 'undefined') {
+  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://placeholder.supabase.co') {
+    console.error('❌ Supabase環境変数が設定されていません！')
+    console.error('Vercelの環境変数設定を確認してください:')
+    console.error('- NEXT_PUBLIC_SUPABASE_URL')
+    console.error('- NEXT_PUBLIC_SUPABASE_ANON_KEY')
+    alert('環境変数が正しく設定されていません。管理者に連絡してください。')
+  }
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+// ビルド時のフォールバック（空文字の場合はプレースホルダーを使用）
+const finalUrl = supabaseUrl || 'https://placeholder.supabase.co'
+const finalKey = supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTI4MDAsImV4cCI6MTk2MDc2ODgwMH0.placeholder'
+
+export const supabase = createClient(finalUrl, finalKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
