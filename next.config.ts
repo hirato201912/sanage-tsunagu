@@ -1,17 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    // デプロイ時にESLintエラーを無視
-    ignoreDuringBuilds: true,
-  },
   typescript: {
-    // デプロイ時にTypeScriptエラーを無視（オプション）
-    // 注意: 本番環境では型エラーがある可能性があります
+    // デプロイ優先のため型エラーを無視
     ignoreBuildErrors: true,
   },
-  // 静的エクスポートを無効化（useSearchParams対応）
-  output: undefined,
+  // Next.js 16では eslint 設定はサポートされていません
+  // ESLintは .eslintrc.json で設定してください
 };
 
 export default nextConfig;
