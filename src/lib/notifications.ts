@@ -16,14 +16,14 @@ export class NotificationService {
   }
 
   private async initializePermission() {
-    if ('Notification' in window) {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
       this.permission = Notification.permission
     }
   }
 
   // 通知許可を要求
   async requestPermission(): Promise<boolean> {
-    if (!('Notification' in window)) {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
       console.warn('このブラウザは通知をサポートしていません')
       return false
     }
@@ -125,7 +125,7 @@ export class NotificationService {
 
   // 通知がサポートされているかチェック
   isSupported(): boolean {
-    return 'Notification' in window
+    return typeof window !== 'undefined' && 'Notification' in window
   }
 }
 

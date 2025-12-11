@@ -1,6 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+// useSearchParams()を使用するため、動的レンダリングを強制
+export const dynamic = 'force-dynamic'
+
+import { useState, useEffect, Suspense } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -40,7 +43,7 @@ interface HistoricalPeriod {
   afterProgress: number
 }
 
-export default function LearningProgressPage() {
+function LearningProgressPageContent() {
   const { user, profile, loading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -1014,5 +1017,17 @@ export default function LearningProgressPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function LearningProgressPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-600">読み込み中...</div>
+      </div>
+    }>
+      <LearningProgressPageContent />
+    </Suspense>
   )
 }
