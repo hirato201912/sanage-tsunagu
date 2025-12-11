@@ -567,17 +567,17 @@ export default function DashboardPage() {
       {/* 学習サポートルーム */}
       <button
         onClick={() => router.push('/messages')}
-        className="relative w-full bg-gradient-to-r from-pink-400 via-pink-400 to-pink-300 hover:from-pink-500 hover:via-pink-500 hover:to-pink-400 rounded-2xl p-4 sm:p-5 transition-all duration-200 shadow-lg flex items-center justify-between text-white overflow-hidden min-h-[80px] active:scale-95"
+        className="relative w-full bg-pink-400 hover:bg-pink-500 rounded-2xl p-4 sm:p-5 transition-all duration-200 shadow-lg flex items-center gap-3 text-white min-h-[80px] active:scale-95"
       >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="bg-white/20 p-2.5 sm:p-3 rounded-xl flex-shrink-0">
-            <MdMessage size={28} />
-          </div>
-          <span className="font-bold text-base sm:text-lg truncate">学習サポートルーム</span>
+        <div className="bg-white/20 p-2.5 sm:p-3 rounded-xl flex-shrink-0">
+          <MdMessage size={28} />
         </div>
+        <span className="font-bold text-base sm:text-lg flex-1 text-left">学習サポートルーム</span>
+
+        {/* 未読バッジ - LINEスタイル */}
         {unreadCount > 0 && (
-          <div className="bg-red-500 text-white text-sm rounded-full px-3 py-1 min-w-[28px] text-center font-bold flex-shrink-0 ml-2">
-            {unreadCount}
+          <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[24px] h-6 flex items-center justify-center font-bold shadow-lg border-2 border-white px-2">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </div>
         )}
       </button>

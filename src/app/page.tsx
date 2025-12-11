@@ -43,13 +43,29 @@ export default function Home() {
 
   // リダイレクト中のローディング表示
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#8DCCB3]/5 via-white to-[#B8E0D0]/10">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#6BB6A8]"></div>
-        <p className="mt-4 text-gray-600">読み込み中...</p>
-        {!loading && !hasRedirected && (
-          <p className="mt-2 text-xs text-gray-400">リダイレクト準備中...</p>
-        )}
+        {/* ロゴ画像 - 静止 */}
+        <div className="mb-6 animate-pulse">
+          <img
+            src="/main_icon.png"
+            alt="ツナグ"
+            className="h-24 w-24 mx-auto opacity-90"
+          />
+        </div>
+
+        {/* ソフトなスピナー */}
+        <div className="flex justify-center mb-4">
+          <div className="flex gap-2">
+            <div className="w-2 h-2 bg-[#6BB6A8] rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+            <div className="w-2 h-2 bg-[#8DCCB3] rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+            <div className="w-2 h-2 bg-[#B8E0D0] rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+          </div>
+        </div>
+
+        {/* 優しいメッセージ */}
+        <p className="text-gray-600 text-sm font-medium">準備しています</p>
+        <p className="mt-1 text-gray-400 text-xs">少々お待ちください</p>
       </div>
     </div>
   )

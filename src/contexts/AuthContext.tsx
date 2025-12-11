@@ -72,9 +72,10 @@ const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise
       .eq('user_id', userId)
       .single()
 
-    // タイムアウトを設定（10秒）
+    // タイムアウトを設定（初回20秒、リトライ時15秒）
+    const timeout = retryCount === 0 ? 20000 : 15000
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000)
+      setTimeout(() => reject(new Error(`Query timeout after ${timeout / 1000} seconds`)), timeout)
     )
 
     console.log('📝 Waiting for query result...')
@@ -142,10 +143,11 @@ const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise
       console.error('  - RLS policy blocking access')
     }
 
-    // ネットワークエラーなどの場合も再試行（最大2回まで）
-    if (retryCount < 2) {
+    // ネットワークエラーなどの場合も再試行（最大1回まで）
+    if (retryCount < 1) {
       console.log(`🔄 Retrying profile fetch... (attempt ${retryCount + 1})`)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // リトライ間隔を500msに短縮
+      await new Promise(resolve => setTimeout(resolve, 500))
       return await fetchProfile(userId, retryCount + 1)
     } else {
       console.error('❌ Max retry attempts reached, setting profile to null')
