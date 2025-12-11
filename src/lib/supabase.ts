@@ -4,29 +4,6 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim()
 const supabaseAnonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim()
 
-// デバッグ用：環境変数の状態を出力（本番環境でも確認できるように）
-if (typeof window !== 'undefined') {
-  console.log('🔍 Supabase環境変数のデバッグ情報:')
-  console.log('URL exists:', !!supabaseUrl)
-  console.log('URL length:', supabaseUrl?.length || 0)
-  console.log('URL starts with https:', supabaseUrl?.startsWith('https://'))
-  console.log('Key exists:', !!supabaseAnonKey)
-  console.log('Key length:', supabaseAnonKey?.length || 0)
-
-  // 完全なURLを表示（デバッグのため一時的に）
-  if (supabaseUrl) {
-    console.log('URL完全版:', supabaseUrl)
-    console.log('URL文字コード:', Array.from(supabaseUrl).map(c => c.charCodeAt(0)))
-  }
-
-  if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://placeholder.supabase.co') {
-    console.error('❌ Supabase環境変数が設定されていません！')
-    console.error('Vercelの環境変数設定を確認してください:')
-    console.error('- NEXT_PUBLIC_SUPABASE_URL')
-    console.error('- NEXT_PUBLIC_SUPABASE_ANON_KEY')
-  }
-}
-
 // ビルド時のフォールバック（空文字の場合はプレースホルダーを使用）
 const finalUrl = supabaseUrl || 'https://placeholder.supabase.co'
 const finalKey = supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTI4MDAsImV4cCI6MTk2MDc2ODgwMH0.placeholder'

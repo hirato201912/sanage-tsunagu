@@ -17,7 +17,6 @@ export default function LoginPage() {
   // 既にログイン済みの場合はダッシュボードへリダイレクト
   useEffect(() => {
     if (!authLoading && user) {
-      console.log('✅ Already logged in, redirecting to dashboard')
       router.replace('/dashboard')
     }
   }, [user, authLoading, router])

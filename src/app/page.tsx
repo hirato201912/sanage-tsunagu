@@ -17,29 +17,18 @@ export default function Home() {
     if (!loading) {
       setHasRedirected(true)
 
-      // スマホでも確実に動作するように window.location を使用
+      // リダイレクト先を決定
       const targetUrl = user ? '/dashboard' : '/login'
 
-      console.log('🚀 Redirecting to:', targetUrl)
-
-      // Next.js routerとwindow.locationの両方を試す
+      // すぐにリダイレクト
       const timer = setTimeout(() => {
-        try {
-          router.replace(targetUrl)
-        } catch (e) {
-          console.error('Router redirect failed, using window.location:', e)
-          window.location.href = targetUrl
-        }
-      }, 100)
+        router.replace(targetUrl)
+      }, 50)
 
       return () => clearTimeout(timer)
     }
   }, [user, loading, router, hasRedirected])
 
-  // デバッグ情報を追加
-  useEffect(() => {
-    console.log('🏠 Home page - loading:', loading, 'user:', !!user, 'hasRedirected:', hasRedirected)
-  }, [loading, user, hasRedirected])
 
   // リダイレクト中のローディング表示
   return (

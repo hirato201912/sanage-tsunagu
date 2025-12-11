@@ -60,99 +60,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise<void> => {
   try {
-    console.log('📝 Fetching profile for userId:', userId)
-    console.log('📝 Retry count:', retryCount)
-
-    // クエリ開始前のログ
-    console.log('📝 Starting Supabase query...')
-
-    const queryPromise = supabase
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('user_id', userId)
       .single()
 
-    // タイムアウトを設定（初回20秒、リトライ時15秒）
-    const timeout = retryCount === 0 ? 20000 : 15000
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`Query timeout after ${timeout / 1000} seconds`)), timeout)
-    )
-
-    console.log('📝 Waiting for query result...')
-
-    const { data, error } = await Promise.race([
-      queryPromise,
-      timeoutPromise
-    ]) as any
-
-    console.log('📝 Query completed!')
-    console.log('📝 Profile query result:')
-    console.log('📝 Data:', data)
-    console.log('📝 Error:', error)
-
     if (error) {
-      // JWT期限切れエラーの場合
-      if (error.code === 'PGRST301' || error.code === 'PGRST302' || error.code === 'PGRST303') {
-        console.log('JWT expired, attempting to refresh session...')
-
-        // セッションを再取得してリトライ
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session && retryCount < 2) {
-          console.log('Session refreshed, retrying profile fetch...')
-          return await fetchProfile(userId, retryCount + 1)
-        } else {
-          console.log('Session refresh failed, redirecting to login...')
-          try {
-            await supabase.auth.signOut()
-          } catch (signOutError) {
-            console.error('Error during sign out:', signOutError)
-          }
-          window.location.href = '/login'
-          return
-        }
-      }
-
-      console.error('Profile fetch error details:', error)
-
       // もしsingleでエラーが出る場合は、全件取得してみる
       const { data: allData } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
 
-      console.log('All matching profiles:', allData)
-
       if (allData && allData.length > 0) {
         setProfile(allData[0])
       } else {
-        console.error('No profile found for user:', userId)
         setProfile(null)
       }
       return
-    } else {
-      setProfile(data)
     }
+
+    setProfile(data)
   } catch (error) {
-    console.error('❌ Error fetching profile:', error)
-
-    // タイムアウトエラーの場合
-    if (error instanceof Error && error.message.includes('timeout')) {
-      console.error('❌ Query timed out. Possible causes:')
-      console.error('  - Slow network connection')
-      console.error('  - Database overload')
-      console.error('  - RLS policy blocking access')
-    }
-
-    // ネットワークエラーなどの場合も再試行（最大1回まで）
-    if (retryCount < 1) {
-      console.log(`🔄 Retrying profile fetch... (attempt ${retryCount + 1})`)
-      // リトライ間隔を500msに短縮
-      await new Promise(resolve => setTimeout(resolve, 500))
-      return await fetchProfile(userId, retryCount + 1)
-    } else {
-      console.error('❌ Max retry attempts reached, setting profile to null')
-      setProfile(null)
-    }
+    console.error('Error fetching profile:', error)
+    setProfile(null)
   }
 }, [])
 
