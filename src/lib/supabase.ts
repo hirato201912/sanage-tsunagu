@@ -4,14 +4,25 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// 実行時の環境変数チェック
+// デバッグ用：環境変数の状態を出力（本番環境でも確認できるように）
 if (typeof window !== 'undefined') {
+  console.log('🔍 Supabase環境変数のデバッグ情報:')
+  console.log('URL exists:', !!supabaseUrl)
+  console.log('URL length:', supabaseUrl?.length || 0)
+  console.log('URL starts with https:', supabaseUrl?.startsWith('https://'))
+  console.log('Key exists:', !!supabaseAnonKey)
+  console.log('Key length:', supabaseAnonKey?.length || 0)
+
+  // URLの一部を表示（セキュリティのため最初の30文字のみ）
+  if (supabaseUrl) {
+    console.log('URL preview:', supabaseUrl.substring(0, 30) + '...')
+  }
+
   if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'https://placeholder.supabase.co') {
     console.error('❌ Supabase環境変数が設定されていません！')
     console.error('Vercelの環境変数設定を確認してください:')
     console.error('- NEXT_PUBLIC_SUPABASE_URL')
     console.error('- NEXT_PUBLIC_SUPABASE_ANON_KEY')
-    alert('環境変数が正しく設定されていません。管理者に連絡してください。')
   }
 }
 
