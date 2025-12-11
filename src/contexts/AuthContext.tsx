@@ -84,7 +84,11 @@ const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise
           return await fetchProfile(userId, retryCount + 1)
         } else {
           console.log('Session refresh failed, redirecting to login...')
-          await supabase.auth.signOut()
+          try {
+            await supabase.auth.signOut()
+          } catch (signOutError) {
+            console.error('Error during sign out:', signOutError)
+          }
           window.location.href = '/login'
           return
         }
@@ -130,8 +134,15 @@ const fetchProfile = useCallback(async (userId: string, retryCount = 0): Promise
   }
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    setProfile(null)
+    try {
+      await supabase.auth.signOut()
+      setProfile(null)
+    } catch (error) {
+      console.error('Sign out error:', error)
+      // エラーが発生してもプロファイルはクリアする
+      setProfile(null)
+      setUser(null)
+    }
   }
 
   const value = {
