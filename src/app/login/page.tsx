@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { MdEmail, MdLock, MdLogin } from 'react-icons/md'
@@ -10,9 +10,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
-  const { signIn } = useAuth()
+
+  const { signIn, user, loading: authLoading } = useAuth()
   const router = useRouter()
+
+  // 既にログイン済みの場合はダッシュボードへリダイレクト
+  useEffect(() => {
+    if (!authLoading && user) {
+      console.log('✅ Already logged in, redirecting to dashboard')
+      router.replace('/dashboard')
+    }
+  }, [user, authLoading, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
