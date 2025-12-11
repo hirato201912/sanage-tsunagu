@@ -136,26 +136,26 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#6BB6A8] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-5">
-            <div className="flex items-center space-x-3">
+          <div className="flex justify-between items-center py-4 sm:py-5 gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <div className="bg-white rounded-xl p-2 shadow-md">
                 <img
                   src="/main_icon.png"
                   alt="ツナグ"
-                  className="h-9 w-9"
+                  className="h-8 w-8 sm:h-9 sm:w-9"
                 />
               </div>
-              <h1 className="text-2xl font-bold text-white">ツナグ</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-white whitespace-nowrap">ツナグ</h1>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="bg-white/20 rounded-xl px-4 py-2.5 border border-white/30">
-                <span className="text-white font-medium text-sm">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="bg-white/20 rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 border border-white/30">
+                <span className="text-white font-medium text-xs sm:text-sm whitespace-nowrap">
                   {profile.full_name}さん ({profile.role === 'admin' ? '塾長' : profile.role === 'instructor' ? '講師' : '生徒'})
                 </span>
               </div>
               <button
                 onClick={handleSignOut}
-                className="bg-white hover:bg-gray-100 text-[#5FA084] px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md"
+                className="bg-white hover:bg-gray-100 text-[#5FA084] px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 shadow-md whitespace-nowrap"
               >
                 ログアウト
               </button>
@@ -242,17 +242,15 @@ export default function DashboardPage() {
 
         <button
           onClick={() => router.push('/messages')}
-          className="relative w-full mt-3 bg-gradient-to-r from-pink-400 via-pink-400 to-pink-300 hover:from-pink-500 hover:via-pink-500 hover:to-pink-400 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white overflow-hidden"
+          className="relative w-full mt-3 bg-pink-400 hover:bg-pink-500 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center gap-3 text-white"
         >
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-3 rounded-xl">
-              <MdMessage size={24} />
-            </div>
-            <span className="font-bold">学習サポートルーム</span>
+          <div className="bg-white/20 p-3 rounded-xl flex-shrink-0">
+            <MdMessage size={24} />
           </div>
+          <span className="font-bold text-left flex-1">学習サポートルーム</span>
           {unreadCount > 0 && (
-            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
-              {unreadCount}
+            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[24px] h-6 flex items-center justify-center font-bold shadow-lg border-2 border-white px-2">
+              {unreadCount > 99 ? '99+' : unreadCount}
             </div>
           )}
         </button>
@@ -399,17 +397,15 @@ export default function DashboardPage() {
 
         <button
           onClick={() => router.push('/messages')}
-          className="relative w-full mt-3 bg-gradient-to-r from-pink-400 via-pink-400 to-pink-300 hover:from-pink-500 hover:via-pink-500 hover:to-pink-400 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white overflow-hidden"
+          className="relative w-full mt-3 bg-pink-400 hover:bg-pink-500 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center gap-3 text-white"
         >
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-3 rounded-xl">
-              <MdMessage size={24} />
-            </div>
-            <span className="font-bold">学習サポートルーム</span>
+          <div className="bg-white/20 p-3 rounded-xl flex-shrink-0">
+            <MdMessage size={24} />
           </div>
+          <span className="font-bold text-left flex-1">学習サポートルーム</span>
           {unreadCount > 0 && (
-            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
-              {unreadCount}
+            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[24px] h-6 flex items-center justify-center font-bold shadow-lg border-2 border-white px-2">
+              {unreadCount > 99 ? '99+' : unreadCount}
             </div>
           )}
         </button>

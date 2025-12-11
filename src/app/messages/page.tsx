@@ -485,27 +485,27 @@ export default function MessagesPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-pink-500 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-5">
-            <div className="flex items-center space-x-3">
+          <div className="flex justify-between items-center py-4 sm:py-5 gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <div className="bg-white rounded-xl p-2 shadow-md">
                 <img
                   src="/main_icon.png"
                   alt="ツナグ"
-                  className="h-9 w-9"
+                  className="h-8 w-8 sm:h-9 sm:w-9"
                 />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">学習サポートルーム</h1>
+                <h1 className="text-lg sm:text-2xl font-bold text-white whitespace-nowrap">学習サポートルーム</h1>
               </div>
             </div>
             <button
               onClick={() => router.push('/dashboard')}
-              className="bg-white hover:bg-gray-100 text-pink-600 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md flex items-center gap-2"
+              className="bg-white hover:bg-gray-100 text-pink-600 px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 shadow-md flex items-center gap-2 whitespace-nowrap flex-shrink-0"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span>ダッシュボード</span>
+              <span className="hidden sm:inline">ダッシュボード</span>
             </button>
           </div>
         </div>
