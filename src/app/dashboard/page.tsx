@@ -521,98 +521,66 @@ export default function DashboardPage() {
   </div>
 )}
 {profile.role === 'student' && (
-  <div className="flex flex-col lg:flex-row gap-6">
-    {/* 生徒サイドバー */}
-    <div className="w-full lg:w-80">
-      <div className="bg-white shadow-xl rounded-2xl p-6">
-        <h2 className="text-xl font-bold mb-6 text-gray-800 flex items-center">
-          <div className="bg-[#6BB6A8] p-2.5 rounded-xl mr-3 shadow-md">
-            <MdSchool className="text-white" size={20} />
-          </div>
-          生徒メニュー
-        </h2>
-
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => router.push('/schedule')}
-            className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col items-center justify-center gap-2 text-white"
-          >
-            <div className="bg-white/20 p-3 rounded-xl">
-              <MdCalendarToday size={24} />
-            </div>
-            <span className="font-semibold text-sm">スケジュール</span>
-          </button>
-
-          <button
-            onClick={() => router.push('/learning-records')}
-            className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col items-center justify-center gap-2 text-white"
-          >
-            <div className="bg-white/20 p-3 rounded-xl">
-              <MdAnalytics size={24} />
-            </div>
-            <span className="font-semibold text-sm">学習記録</span>
-          </button>
-
-          <button
-            onClick={() => router.push('/my-test-scores')}
-            className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 transition-all duration-200 shadow-md flex flex-col items-center justify-center gap-2 text-white col-span-2"
-          >
-            <div className="bg-white/20 p-3 rounded-xl">
-              <MdTrendingUp size={24} />
-            </div>
-            <span className="font-semibold text-sm">マイ成績</span>
-          </button>
+  <div className="max-w-2xl mx-auto">
+    {/* 生徒メニュー - スマホ最適化 */}
+    <div className="bg-white shadow-xl rounded-2xl p-4 sm:p-6">
+      <h2 className="text-xl font-bold mb-4 sm:mb-6 text-gray-800 flex items-center">
+        <div className="bg-[#6BB6A8] p-2 sm:p-2.5 rounded-xl mr-2 sm:mr-3 shadow-md flex-shrink-0">
+          <MdSchool className="text-white" size={20} />
         </div>
+        <span className="truncate">生徒メニュー</span>
+      </h2>
+
+      {/* メインメニュー - スマホでは1列、タブレット以上で2列 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+        <button
+          onClick={() => router.push('/schedule')}
+          className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 sm:p-5 transition-all duration-200 shadow-md flex items-center justify-center gap-3 text-white min-h-[80px] active:scale-95"
+        >
+          <div className="bg-white/20 p-2.5 sm:p-3 rounded-xl flex-shrink-0">
+            <MdCalendarToday size={28} />
+          </div>
+          <span className="font-semibold text-base sm:text-lg">スケジュール</span>
+        </button>
 
         <button
-          onClick={() => router.push('/messages')}
-          className="relative w-full mt-3 bg-gradient-to-r from-pink-400 via-pink-400 to-pink-300 hover:from-pink-500 hover:via-pink-500 hover:to-pink-400 rounded-2xl p-4 transition-all duration-200 shadow-lg flex items-center justify-between text-white overflow-hidden"
+          onClick={() => router.push('/learning-records')}
+          className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 sm:p-5 transition-all duration-200 shadow-md flex items-center justify-center gap-3 text-white min-h-[80px] active:scale-95"
         >
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-3 rounded-xl">
-              <MdMessage size={24} />
-            </div>
-            <span className="font-bold">学習サポートルーム</span>
+          <div className="bg-white/20 p-2.5 sm:p-3 rounded-xl flex-shrink-0">
+            <MdAnalytics size={28} />
           </div>
-          {unreadCount > 0 && (
-            <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center font-bold">
-              {unreadCount}
-            </div>
-          )}
+          <span className="font-semibold text-base sm:text-lg">学習記録</span>
+        </button>
+
+        <button
+          onClick={() => router.push('/my-test-scores')}
+          className="bg-[#6BB6A8] hover:bg-[#5FA084] rounded-2xl p-4 sm:p-5 transition-all duration-200 shadow-md flex items-center justify-center gap-3 text-white min-h-[80px] active:scale-95 sm:col-span-2"
+        >
+          <div className="bg-white/20 p-2.5 sm:p-3 rounded-xl flex-shrink-0">
+            <MdTrendingUp size={28} />
+          </div>
+          <span className="font-semibold text-base sm:text-lg">マイ成績</span>
         </button>
       </div>
-    </div>
 
-    {/* 生徒メインエリア */}
-    <div className="flex-1">
-      <div className="bg-white shadow rounded-lg p-6 border-t-4 border-[#8DCCB3]">
-        <h3 className="text-lg font-semibold mb-4 text-gray-800 flex items-center">
-          <MdTrendingUp className="mr-2 text-[#8DCCB3]" />
-          学習状況
-        </h3>
-        <div className="space-y-3">
-          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
-            <div className="w-2 h-2 bg-[#8DCCB3] rounded-full mr-3"></div>
-            <div>
-              <div className="font-medium text-gray-800">今週の学習時間</div>
-              <div className="text-sm text-gray-600">12時間 / 目標15時間</div>
-            </div>
+      {/* 学習サポートルーム */}
+      <button
+        onClick={() => router.push('/messages')}
+        className="relative w-full bg-gradient-to-r from-pink-400 via-pink-400 to-pink-300 hover:from-pink-500 hover:via-pink-500 hover:to-pink-400 rounded-2xl p-4 sm:p-5 transition-all duration-200 shadow-lg flex items-center justify-between text-white overflow-hidden min-h-[80px] active:scale-95"
+      >
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="bg-white/20 p-2.5 sm:p-3 rounded-xl flex-shrink-0">
+            <MdMessage size={28} />
           </div>
-          <div className="flex items-center p-3 bg-[#8DCCB3]/5 rounded-lg border border-[#8DCCB3]/10">
-            <div className="w-2 h-2 bg-[#B8E0D0] rounded-full mr-3"></div>
-            <div>
-              <div className="font-medium text-gray-800">次回授業予定</div>
-              <div className="text-sm text-gray-600">明日 14:00 - 数学</div>
-            </div>
-          </div>
-          <button 
-            onClick={() => router.push('/learning-records')}
-            className="w-full text-center py-3 text-[#8DCCB3] hover:bg-[#8DCCB3]/10 rounded-lg transition-all duration-200 text-sm font-medium border border-[#8DCCB3]/20 hover:border-[#8DCCB3]/40"
-          >
-            詳しい学習記録を確認 →
-          </button>
+          <span className="font-bold text-base sm:text-lg truncate">学習サポートルーム</span>
         </div>
-      </div>
+        {unreadCount > 0 && (
+          <div className="bg-red-500 text-white text-sm rounded-full px-3 py-1 min-w-[28px] text-center font-bold flex-shrink-0 ml-2">
+            {unreadCount}
+          </div>
+        )}
+      </button>
     </div>
   </div>
 )}
