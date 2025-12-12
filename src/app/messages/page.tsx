@@ -8,6 +8,7 @@ import type { Message, Profile } from '@/lib/supabase'
 import { notificationService } from '@/lib/notifications'
 import { compressImage, validateImageFile, generateImagePath } from '@/lib/image-utils'
 import { MdSend, MdImage, MdClose } from 'react-icons/md'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 
 interface MessageWithProfiles extends Message {
   sender: Profile
@@ -28,6 +29,9 @@ export default function MessagesPage() {
   const [messagesLoading, setMessagesLoading] = useState(true)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null)
   const [availableUsers, setAvailableUsers] = useState<ConversationUser[]>([])
   const [notificationPermissionRequested, setNotificationPermissionRequested] = useState(false)

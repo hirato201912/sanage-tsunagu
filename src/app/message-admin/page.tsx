@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Message, Profile } from '@/lib/supabase'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 
 interface MessageWithProfiles extends Message {
   sender: Profile
@@ -25,6 +26,9 @@ export default function MessageAdminPage() {
   const [selectedConversation, setSelectedConversation] = useState<ConversationData | null>(null)
   const [messagesLoading, setMessagesLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
 
   useEffect(() => {
     if (!loading && !user) {

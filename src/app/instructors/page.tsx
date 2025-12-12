@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 
 export default function InstructorsPage() {
   const { user, profile, loading } = useAuth()
@@ -13,6 +14,9 @@ export default function InstructorsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingInstructor, setEditingInstructor] = useState<Profile | null>(null)
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
 
   // フォーム用の状態
   const [formData, setFormData] = useState({

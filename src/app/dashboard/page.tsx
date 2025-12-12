@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Schedule, Profile } from '@/lib/supabase'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 import { 
   MdDashboard, 
   MdCalendarToday, 
@@ -32,6 +33,9 @@ export default function DashboardPage() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [todaySchedules, setTodaySchedules] = useState<ScheduleWithProfile[]>([])
   const [isLoadingSchedules, setIsLoadingSchedules] = useState(false)
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
 
   useEffect(() => {
     if (!loading && !user) {

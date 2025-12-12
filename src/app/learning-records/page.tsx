@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { StudentLessonSetting, LearningTask } from '@/lib/supabase'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 import {
   getNextLessonDate,
   getPreviousLessonDate,
@@ -50,6 +51,9 @@ export default function LearningTasksPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showAddTask, setShowAddTask] = useState(false)
   const [selectedPeriod, setSelectedPeriod] = useState<'before' | 'after'>('after')
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
 
   // 履歴閲覧用
   const [showHistory, setShowHistory] = useState(false)

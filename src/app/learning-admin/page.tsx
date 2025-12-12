@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { StudentLessonSetting, Profile } from '@/lib/supabase'
 import { getDayName, getNextLessonDate, formatDateToJapanese } from '@/lib/dateUtils'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 import {
   MdCalendarToday,
   MdAddCircle,
@@ -32,6 +33,9 @@ export default function LearningAdminPage() {
   const [showModal, setShowModal] = useState(false)
   const [editingStudent, setEditingStudent] = useState<Profile | null>(null)
   const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<number>(1) // デフォルト: 月曜日
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
 
   useEffect(() => {
     if (!loading && (!user || !profile)) {

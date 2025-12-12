@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { getAndClearLastPage } from '@/utils/navigation'
 
 export default function Home() {
   const { user, loading } = useAuth()
@@ -32,7 +33,16 @@ export default function Home() {
       clearTimeout(forceRedirectTimer)
 
       // リダイレクト先を決定
-      const targetUrl = user ? '/dashboard' : '/login'
+      let targetUrl: string
+
+      if (user) {
+        // ログイン済みの場合、保存されたページがあればそこに戻る
+        const lastPage = getAndClearLastPage()
+        targetUrl = lastPage || '/dashboard'
+      } else {
+        // 未ログインの場合はログインページへ
+        targetUrl = '/login'
+      }
 
       // すぐにリダイレクト
       try {

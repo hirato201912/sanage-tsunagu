@@ -13,6 +13,7 @@ import RecurringScheduleForm from '@/components/RecurringScheduleForm'
 import { formatRecurringSchedule } from '@/lib/schedule-utils'
 import type { RecurringSchedule } from '@/lib/supabase'
 import { notificationService } from '@/lib/notifications'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 
 // 編集モーダルコンポーネント
 function EditModal({ schedule, recurring, onClose, onUpdate }: {
@@ -259,6 +260,9 @@ export default function SchedulePage() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null)
   const [editingRecurring, setEditingRecurring] = useState<RecurringSchedule | null>(null)
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
 
   useEffect(() => {
     if (!loading && !user) {

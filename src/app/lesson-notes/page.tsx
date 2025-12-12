@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 
 interface LessonNote {
   id: string
@@ -28,6 +29,9 @@ export default function LessonNotesPage() {
   const [lessonNotes, setLessonNotes] = useState<LessonNote[]>([])
   const [students, setStudents] = useState<Profile[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
   const [showForm, setShowForm] = useState(false)
   const [editingNote, setEditingNote] = useState<LessonNote | null>(null)
   const [formData, setFormData] = useState({

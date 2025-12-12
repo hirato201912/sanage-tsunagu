@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 
 const PRESET_SUBJECTS = [
   '現代の国語',
@@ -82,6 +83,9 @@ export default function MyTestScoresPage() {
     test_date: '',
     subjects: [] as SubjectScore[]
   })
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
 
   useEffect(() => {
     if (!loading && (!user || !profile)) {

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
 import TestScoreHeatmap from '@/components/TestScoreHeatmap'
+import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
 
 interface TestScore {
   id: string
@@ -38,6 +39,9 @@ export default function TestScoresPage() {
   const [activeTab, setActiveTab] = useState<'list' | 'analysis'>('list')
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest')
   const [maxVisiblePeriods, setMaxVisiblePeriods] = useState(4)
+
+  // リロード時にこのページに戻れるように保存
+  useSaveCurrentPage()
 
   useEffect(() => {
     if (!loading && (!user || !profile)) {
