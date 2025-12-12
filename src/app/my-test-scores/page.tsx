@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
 import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
+import LoadingScreen from '@/components/LoadingScreen'
 
 const PRESET_SUBJECTS = [
   '現代の国語',

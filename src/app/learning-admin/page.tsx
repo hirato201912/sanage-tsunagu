@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import type { StudentLessonSetting, Profile } from '@/lib/supabase'
 import { getDayName, getNextLessonDate, formatDateToJapanese } from '@/lib/dateUtils'
 import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
+import LoadingScreen from '@/components/LoadingScreen'
 import {
   MdCalendarToday,
   MdAddCircle,

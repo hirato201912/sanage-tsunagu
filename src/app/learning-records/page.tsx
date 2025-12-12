@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { StudentLessonSetting, LearningTask } from '@/lib/supabase'
 import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
+import LoadingScreen from '@/components/LoadingScreen'
 import {
   getNextLessonDate,
   getPreviousLessonDate,

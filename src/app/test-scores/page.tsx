@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
 import TestScoreHeatmap from '@/components/TestScoreHeatmap'
 import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
+import LoadingScreen from '@/components/LoadingScreen'
 
 interface TestScore {
   id: string
