@@ -14,6 +14,7 @@ import { formatRecurringSchedule } from '@/lib/schedule-utils'
 import type { RecurringSchedule } from '@/lib/supabase'
 import { notificationService } from '@/lib/notifications'
 import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
+import LoadingScreen from '@/components/LoadingScreen'
 
 // 編集モーダルコンポーネント
 function EditModal({ schedule, recurring, onClose, onUpdate }: {
@@ -794,11 +795,7 @@ export default function SchedulePage() {
   }
 
   if (loading || scheduleLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>読み込み中...</div>
-      </div>
-    )
+    return <LoadingScreen message="スケジュールを読み込んでいます" />
   }
 
   if (!user || !profile) {

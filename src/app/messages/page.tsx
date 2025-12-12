@@ -9,6 +9,7 @@ import { notificationService } from '@/lib/notifications'
 import { compressImage, validateImageFile, generateImagePath } from '@/lib/image-utils'
 import { MdSend, MdImage, MdClose } from 'react-icons/md'
 import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
+import LoadingScreen from '@/components/LoadingScreen'
 
 interface MessageWithProfiles extends Message {
   sender: Profile
@@ -474,11 +475,7 @@ export default function MessagesPage() {
   }
 
   if (loading || messagesLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>読み込み中...</div>
-      </div>
-    )
+    return <LoadingScreen message="メッセージを読み込んでいます" />
   }
 
   if (!user || !profile) {

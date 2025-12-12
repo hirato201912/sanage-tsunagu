@@ -1,18 +1,26 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { getAndClearLastPage } from '@/utils/navigation'
+import LoadingScreen from '@/components/LoadingScreen'
 
 export default function Home() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const [hasRedirected, setHasRedirected] = useState(false)
+  // 保存されたページを一度だけ取得（React Strict Mode対策）
+  const savedPageRef = useRef<string | null | undefined>(undefined)
 
   useEffect(() => {
     // すでにリダイレクト済みなら何もしない
     if (hasRedirected) return
+
+    // 保存されたページを一度だけ取得（初回のみ）
+    if (savedPageRef.current === undefined) {
+      savedPageRef.current = getAndClearLastPage()
+    }
 
     // 強制リダイレクト: 6秒経っても何も起きない場合はログインページへ
     const forceRedirectTimer = setTimeout(() => {
@@ -37,8 +45,7 @@ export default function Home() {
 
       if (user) {
         // ログイン済みの場合、保存されたページがあればそこに戻る
-        const lastPage = getAndClearLastPage()
-        targetUrl = lastPage || '/dashboard'
+        targetUrl = savedPageRef.current || '/dashboard'
       } else {
         // 未ログインの場合はログインページへ
         targetUrl = '/login'
@@ -58,31 +65,5 @@ export default function Home() {
 
 
   // リダイレクト中のローディング表示
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#8DCCB3]/5 via-white to-[#B8E0D0]/10">
-      <div className="text-center">
-        {/* ロゴ画像 - 静止 */}
-        <div className="mb-6 animate-pulse">
-          <img
-            src="/main_icon.png"
-            alt="ツナグ"
-            className="h-24 w-24 mx-auto opacity-90"
-          />
-        </div>
-
-        {/* ソフトなスピナー */}
-        <div className="flex justify-center mb-4">
-          <div className="flex gap-2">
-            <div className="w-2 h-2 bg-[#6BB6A8] rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
-            <div className="w-2 h-2 bg-[#8DCCB3] rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
-            <div className="w-2 h-2 bg-[#B8E0D0] rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
-          </div>
-        </div>
-
-        {/* 優しいメッセージ */}
-        <p className="text-gray-600 text-sm font-medium">準備しています</p>
-        <p className="mt-1 text-gray-400 text-xs">少々お待ちください</p>
-      </div>
-    </div>
-  )
+  return <LoadingScreen />
 }

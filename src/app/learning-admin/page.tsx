@@ -157,11 +157,7 @@ export default function LearningAdminPage() {
   }))
 
   if (loading || isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">読み込み中...</div>
-      </div>
-    )
+    return <LoadingScreen message="学習管理設定を読み込んでいます" />
   }
 
   return (

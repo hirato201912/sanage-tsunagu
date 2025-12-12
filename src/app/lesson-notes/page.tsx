@@ -6,6 +6,7 @@ import type { Profile } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
+import LoadingScreen from '@/components/LoadingScreen'
 
 interface LessonNote {
   id: string
@@ -349,11 +350,7 @@ export default function LessonNotesPage() {
   }
 
   if (loading || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-gray-600">読み込み中...</div>
-      </div>
-    )
+    return <LoadingScreen message="授業記録を読み込んでいます" />
   }
 
   if (!user || !profile) {

@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { Schedule, Profile } from '@/lib/supabase'
 import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
+import LoadingScreen from '@/components/LoadingScreen'
 import { 
   MdDashboard, 
   MdCalendarToday, 
@@ -120,11 +121,7 @@ export default function DashboardPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>読み込み中...</div>
-      </div>
-    )
+    return <LoadingScreen message="ダッシュボードを読み込んでいます" />
   }
 
   if (!user || !profile) {

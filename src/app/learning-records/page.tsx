@@ -322,11 +322,7 @@ export default function LearningTasksPage() {
   }
 
   if (loading || isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">読み込み中...</div>
-      </div>
-    )
+    return <LoadingScreen message="学習記録を読み込んでいます" />
   }
 
   if (!lessonSetting) {

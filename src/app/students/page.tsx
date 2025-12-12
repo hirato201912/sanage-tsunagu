@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/lib/supabase'
 import { useSaveCurrentPage } from '@/hooks/useSaveCurrentPage'
+import LoadingScreen from '@/components/LoadingScreen'
 
 export default function StudentsPage() {
   const { user, profile, loading } = useAuth()
@@ -173,11 +174,7 @@ export default function StudentsPage() {
   }
 
   if (loading || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div>読み込み中...</div>
-      </div>
-    )
+    return <LoadingScreen message="生徒情報を読み込んでいます" />
   }
 
   if (!user || profile?.role !== 'admin') {

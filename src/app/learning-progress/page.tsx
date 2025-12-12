@@ -342,11 +342,7 @@ function LearningProgressPageContent() {
   }
 
   if (loading || isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">読み込み中...</div>
-      </div>
-    )
+    return <LoadingScreen message="学習進捗を読み込んでいます" />
   }
 
   if (!student || !lessonSetting) {
@@ -1026,11 +1022,7 @@ function LearningProgressPageContent() {
 
 export default function LearningProgressPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">読み込み中...</div>
-      </div>
-    }>
+    <Suspense fallback={<LoadingScreen message="学習進捗を読み込んでいます" />}>
       <LearningProgressPageContent />
     </Suspense>
   )

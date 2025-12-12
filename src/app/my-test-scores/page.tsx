@@ -293,14 +293,7 @@ export default function MyTestScoresPage() {
   }
 
   if (loading || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex items-center space-x-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#8DCCB3]"></div>
-          <span className="text-gray-600">読み込み中...</span>
-        </div>
-      </div>
-    )
+    return <LoadingScreen message="テスト成績を読み込んでいます" />
   }
 
   if (!user || !profile || profile.role !== 'student') {
